@@ -1,0 +1,16 @@
+FROM node:24-bookworm-slim
+
+WORKDIR /app
+
+COPY package.json package-lock.json .npmrc* ./
+
+ENV HUSKY=0
+
+RUN npm ci --no-audit --no-fund --ignore-scripts
+
+COPY global-bundle.pem ./
+
+EXPOSE 3001
+
+
+CMD ["npm", "run", "dev"]

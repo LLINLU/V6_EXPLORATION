@@ -1,0 +1,29 @@
+services:
+  # Render service: srv-d6i3ocggjchc73d2t0k0 (memory-ai-app-preview)
+  # Branch: preview
+  - type: worker
+    name: memory-ai-app-preview
+    runtime: ruby
+    repo: https://github.com/MemoryLabDev/memory-ai-app
+    branch: preview
+    rootDir: rails
+    buildCommand: bundle install
+    startCommand: bundle exec good_job start --enable-cron
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SEARCH_API_URL
+        sync: false
+      - key: SEARCH_API_USER
+        sync: false
+      - key: SEARCH_API_PASS
+        sync: false
+      - key: RAILS_ENV
+        value: production
+      - key: SECRET_KEY_BASE
+        generateValue: true
+      - key: RAILS_LOG_TO_STDOUT
+        value: "1"
+      - key: GOOD_JOB_ENABLE_CRON
+        value: "1"
+    preDeployCommand: bundle exec rails db:migrate

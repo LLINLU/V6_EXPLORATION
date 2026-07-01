@@ -1,0 +1,23 @@
+name: Deploy PRD memoryai-backend
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-memoryai-backend.yml
+    with:
+      environment: be-prd
+      aws-region: ap-northeast-1
+      ecr-repository: mlab-prd-memoryai-backend
+      ecs-cluster: mlab-prd-memory-ai-ecs-cluster
+      ecs-service: mlab-prd-memoryai-backend-service
+      ecs-task-definition: ./infrastructure/prd/mlab-prd-memoryai-backend-task.json
+      container-name: memoryai-backend
+      ecs-migrate-task-definition: ./infrastructure/prd/mlab-prd-memoryai-migrate-task.json
+      migrate-container-name: memoryai-migrate
+    secrets: inherit

@@ -1,0 +1,310 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+	.scrollbar-hide {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+	.scrollbar-hide::-webkit-scrollbar {
+		display: none;
+	}
+}
+
+@layer base {
+	:root {
+		--background: 0 0% 100%;
+		--foreground: 222.2 84% 4.9%;
+
+		--card: 0 0% 100%;
+		--card-foreground: 222.2 84% 4.9%;
+
+		--popover: 0 0% 100%;
+		--popover-foreground: 222.2 84% 4.9%;
+
+		--primary: 222.2 47.4% 11.2%;
+		--primary-foreground: 210 40% 98%;
+
+		--secondary: 210 40% 96.1%;
+		--secondary-foreground: 222.2 47.4% 11.2%;
+
+		--muted: 210 40% 96.1%;
+		--muted-foreground: 215.4 16.3% 46.9%;
+
+		--accent: 210 40% 96.1%;
+		--accent-foreground: 222.2 47.4% 11.2%;
+
+		--destructive: 0 84.2% 60.2%;
+		--destructive-foreground: 210 40% 98%;
+
+		--border: 214.3 31.8% 91.4%;
+		--input: 214.3 31.8% 91.4%;
+		--ring: 222.2 84% 4.9%;
+
+		--radius: 0.5rem;
+
+		--sidebar-background: 0 0% 98%;
+
+		--sidebar-foreground: 240 5.3% 26.1%;
+
+		--sidebar-primary: 240 5.9% 10%;
+
+		--sidebar-primary-foreground: 0 0% 98%;
+
+		--sidebar-accent: 240 4.8% 95.9%;
+
+		--sidebar-accent-foreground: 240 5.9% 10%;
+
+		--sidebar-border: 220 13% 91%;
+
+		--sidebar-ring: 217.2 91.2% 59.8%;
+	}
+
+	.dark {
+		--background: 222.2 84% 4.9%;
+		--foreground: 210 40% 98%;
+
+		--card: 222.2 84% 4.9%;
+		--card-foreground: 210 40% 98%;
+
+		--popover: 222.2 84% 4.9%;
+		--popover-foreground: 210 40% 98%;
+
+		--primary: 210 40% 98%;
+		--primary-foreground: 222.2 47.4% 11.2%;
+
+		--secondary: 217.2 32.6% 17.5%;
+		--secondary-foreground: 210 40% 98%;
+
+		--muted: 217.2 32.6% 17.5%;
+		--muted-foreground: 215 20.2% 65.1%;
+
+		--accent: 217.2 32.6% 17.5%;
+		--accent-foreground: 210 40% 98%;
+
+		--destructive: 0 62.8% 30.6%;
+		--destructive-foreground: 210 40% 98%;
+
+		--border: 217.2 32.6% 17.5%;
+		--input: 217.2 32.6% 17.5%;
+		--ring: 212.7 26.8% 83.9%;
+		--sidebar-background: 240 5.9% 10%;
+		--sidebar-foreground: 240 4.8% 95.9%;
+		--sidebar-primary: 224.3 76.3% 48%;
+		--sidebar-primary-foreground: 0 0% 100%;
+		--sidebar-accent: 240 3.7% 15.9%;
+		--sidebar-accent-foreground: 240 4.8% 95.9%;
+		--sidebar-border: 240 3.7% 15.9%;
+		--sidebar-ring: 217.2 91.2% 59.8%;
+	}
+}
+
+@layer base {
+	* {
+		@apply border-border;
+	}
+
+	html,
+	body {
+		@apply bg-background text-foreground;
+		height: 100vh;
+	}
+
+	#root {
+		height: 100vh;
+		background-color: rgba(255, 255, 255, 1);
+	}
+
+	/* Page-specific class for mindmap to prevent scrolling */
+	.tech-tree-page-mindmap {
+		overflow: hidden;
+		height: 100vh;
+	}
+
+	/* Page-specific class for treemap to allow scrolling */
+	.tech-tree-page-treemap {
+		height: 100vh;
+	}
+}
+
+/* TreeMap scroll container styles - layout handled by Tailwind (flex-1, overflow-y-auto, overflow-x-hidden) */
+.treemap-scroll-container::-webkit-scrollbar {
+	width: 8px;
+}
+
+.treemap-scroll-container::-webkit-scrollbar-track {
+	background: #f1f1f1;
+}
+
+.treemap-scroll-container::-webkit-scrollbar-thumb {
+	background: #888;
+	border-radius: 4px;
+}
+
+/* Hide all Google Translate branding */
+.goog-te-gadget-simple .goog-te-gadget-icon,
+.goog-te-gadget-simple .goog-te-menu-value span:last-child,
+.goog-te-banner-frame,
+.goog-te-ftab,
+.VIpgJd-ZVi9od-l4eHX-hSRGPd,
+.goog-te-gadget > span > a,
+.goog-logo-link {
+	display: none !important;
+}
+
+/* Style the translator dropdown */
+.goog-te-gadget-simple {
+	background: transparent !important;
+	border: none !important;
+	font-family: inherit !important;
+	font-size: 14px !important;
+	padding: 5px !important;
+}
+
+/* Style the language text */
+.goog-te-menu-value span:first-child {
+	color: inherit !important;
+}
+
+/* Remove default styling */
+.goog-te-gadget-simple:after {
+	display: none !important;
+}
+
+.goog-te-gadget .goog-te-combo {
+	margin: 0 !important;
+}
+
+/* Prevent GT from pushing page content down when its banner is hidden */
+body {
+	top: 0 !important;
+}
+
+/* Google Translate injected widget (scenario panel / inline gadget) */
+div.skiptranslate {
+	padding-top: 12px;
+	padding-bottom: 12px;
+}
+
+/* Chat mention styles */
+.mention-highlight {
+	background: rgba(59, 130, 246, 0.15) !important;
+	color: #1e40af !important;
+	padding: 1px 3px !important;
+	border-radius: 3px !important;
+	font-weight: inherit !important;
+	font-size: inherit !important;
+	font-family: inherit !important;
+	line-height: inherit !important;
+	letter-spacing: inherit !important;
+	display: inline !important;
+	border: 1px solid rgba(59, 130, 246, 0.3) !important;
+	vertical-align: baseline !important;
+	margin: 0 !important;
+	text-transform: none !important;
+	text-decoration: none !important;
+}
+
+/* Mention styles for user messages (white background) */
+.mention-highlight-user {
+	background: rgba(255, 255, 255, 0.9) !important;
+	color: #1e40af !important;
+	padding: 1px 3px !important;
+	border-radius: 3px !important;
+	font-weight: inherit !important;
+	font-size: inherit !important;
+	font-family: inherit !important;
+	line-height: inherit !important;
+	letter-spacing: inherit !important;
+	display: inline !important;
+	border: 1px solid rgba(255, 255, 255, 0.8) !important;
+	box-shadow: 0 0 0 1px rgba(30, 64, 175, 0.2) !important;
+	vertical-align: baseline !important;
+	margin: 0 !important;
+	text-transform: none !important;
+	text-decoration: none !important;
+}
+
+/* ContentEditable placeholder styling */
+[contenteditable][data-placeholder]:empty:before {
+	content: attr(data-placeholder);
+	color: #9ca3af;
+	pointer-events: none;
+}
+
+/* Mention node styles for contentEditable */
+.mention-node {
+	display: inline !important;
+	user-select: none;
+	cursor: default;
+}
+
+/* Wireframe globe rotation */
+@keyframes pulse-rotate {
+	0% {
+		transform: rotate(0deg) scale(1);
+	}
+	50% {
+		transform: rotate(180deg) scale(1.05);
+	}
+	100% {
+		transform: rotate(360deg) scale(1);
+	}
+}
+
+/* Ask AI button flowing color animation */
+@keyframes color-flow {
+	0% {
+		background-position: 0% 50%;
+	}
+	100% {
+		background-position: 100% 50%;
+	}
+}
+
+.ask-ai-btn {
+	background: linear-gradient(
+		60deg,
+		#2463eb 0%,
+		rgb(194 149 226) 50%,
+		#2463eb 100%
+	);
+	background-size: 200% 100%;
+	background-position: 0% 50%;
+	transition: background-position 0.3s ease;
+}
+
+.ask-ai-btn:hover {
+	animation: color-flow 1s linear infinite;
+}
+
+.ai-gradient-text {
+	background: linear-gradient(
+		60deg,
+		#2463eb 0%,
+		rgb(194 149 226) 50%,
+		#2463eb 100%
+	);
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+.ai-badge {
+	background: linear-gradient(
+		60deg,
+		#2463eb 0%,
+		rgb(194 149 226) 50%,
+		#2463eb 100%
+	);
+	background-size: 200% 100%;
+	background-position: 0% 50%;
+	transition: background-position 0.3s ease;
+	color: white;
+	border: none;
+}
+
+.ai-badge:hover {
+	animation: color-flow 1s linear infinite;
+}

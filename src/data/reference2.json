@@ -1,0 +1,292 @@
+{
+	"root": {
+		"id": "root",
+		"name": "Search Theme: ピエゾ素子を使った骨伝導の補聴器・イヤホン",
+		"description": "ピエゾ素子を利用した骨伝導補聴器やイヤホンの応用シナリオ全体構造。",
+		"axis": "Scenario",
+		"children": [
+			{
+				"id": "lev1_6f7a91",
+				"name": "難聴者の聴覚補助（Hearing assistance for the hearing impaired）",
+				"description": "難聴者に対し、骨伝導技術で音情報を伝達し、日常会話や生活音をサポートする。",
+				"axis": "Purpose",
+				"children": [
+					{
+						"id": "lev2_b8a34d",
+						"name": "会話音声の明瞭伝達（Clear transmission of conversational speech）",
+						"description": "対面会話や電話音声の明瞭な伝達を実現。",
+						"axis": "Function",
+						"children": [
+							{
+								"id": "lev3_8c7f12",
+								"name": "音声信号の骨伝導変換（Conversion of speech to bone conduction）",
+								"description": "音声信号をピエゾ素子で骨伝導波に変換。",
+								"axis": "Measure",
+								"children": [
+									{
+										"id": "lev4_a9812b",
+										"name": "ピエゾ素子の音波変換効率最適化（Optimization of piezo transducer efficiency）",
+										"description": "ピエゾ素子の材質選定や振動板構造の最適化。",
+										"axis": "Measure",
+										"children": [
+											{
+												"id": "lev5_e12b37",
+												"name": "PZT/PMN-PT圧電材料選定（Piezoelectric material selection）",
+												"description": "高効率な圧電材料の開発・適用。",
+												"axis": "Measure",
+												"children": []
+											},
+											{
+												"id": "lev5_f3ab88",
+												"name": "微細構造設計と厚み制御（Microstructure and thickness control）",
+												"description": "音波伝達効率を最大化するための振動板設計技術。",
+												"axis": "Measure",
+												"children": []
+											}
+										]
+									},
+									{
+										"id": "lev4_e831cd",
+										"name": "音響インピーダンス整合（Acoustic impedance matching）",
+										"description": "頭蓋骨とピエゾ素子間の音響エネルギー損失を低減する設計。",
+										"axis": "Measure",
+										"children": [
+											{
+												"id": "lev5_5bd47d",
+												"name": "インターフェース素材開発（Interface material development）",
+												"description": "シリコンやゲルパッド等のインターフェース素材最適化。",
+												"axis": "Measure",
+												"children": []
+											},
+											{
+												"id": "lev5_983b72",
+												"name": "形状適合設計（Shape conformity design）",
+												"description": "頭部形状にフィットさせる3D設計手法。",
+												"axis": "Measure",
+												"children": []
+											}
+										]
+									}
+								]
+							},
+							{
+								"id": "lev3_7824cf",
+								"name": "雑音抑制と信号処理（Noise suppression and signal processing）",
+								"description": "環境雑音下で音声の聞き取りやすさ向上。",
+								"axis": "Measure",
+								"children": [
+									{
+										"id": "lev4_d6b12c",
+										"name": "アクティブノイズキャンセリング（Active noise cancelling）",
+										"description": "ピエゾ素子駆動信号への逆位相信号重畳制御。",
+										"axis": "Measure",
+										"children": [
+											{
+												"id": "lev5_c1a6e4",
+												"name": "リアルタイム信号解析回路（Real-time signal analysis circuit）",
+												"description": "DSP等によるリアルタイム音声解析・制御。",
+												"axis": "Measure",
+												"children": []
+											}
+										]
+									},
+									{
+										"id": "lev4_2fd32b",
+										"name": "自動利得制御（Automatic gain control）",
+										"description": "入力音圧レベルの自動調整アルゴリズム。",
+										"axis": "Measure",
+										"children": [
+											{
+												"id": "lev5_3b86b1",
+												"name": "AGC回路設計（AGC circuit design）",
+												"description": "適応型利得制御回路の設計手法。",
+												"axis": "Measure",
+												"children": []
+											}
+										]
+									}
+								]
+							}
+						]
+					},
+					{
+						"id": "lev2_d9e614",
+						"name": "快適な装着性と長時間利用（Comfortable and prolonged wearing）",
+						"description": "圧迫感や違和感のないデザインによる長時間装着支援。",
+						"axis": "Function",
+						"children": [
+							{
+								"id": "lev3_a23b5c",
+								"name": "軽量・小型化設計（Lightweight and compact design）",
+								"description": "装着時の負担軽減とデザイン性両立。",
+								"axis": "Measure",
+								"children": [
+									{
+										"id": "lev4_5839b7",
+										"name": "超薄型ピエゾ素子開発（Ultra-thin piezo device development）",
+										"description": "厚み1mm以下のピエゾ素子製造技術。",
+										"axis": "Measure",
+										"children": []
+									},
+									{
+										"id": "lev4_c8b27f",
+										"name": "3Dプリント筐体設計（3D printed housing design）",
+										"description": "カスタムフィット筐体の3Dプリント技術。",
+										"axis": "Measure",
+										"children": []
+									}
+								]
+							},
+							{
+								"id": "lev3_6e18db",
+								"name": "皮膚刺激・圧迫の最小化（Minimization of skin irritation and pressure）",
+								"description": "長時間接触による皮膚トラブルを防止。",
+								"axis": "Measure",
+								"children": [
+									{
+										"id": "lev4_a738f1",
+										"name": "医療用シリコンカバー（Medical silicone cover）",
+										"description": "柔軟性と通気性を兼ねたカバー素材開発。",
+										"axis": "Measure",
+										"children": []
+									}
+								]
+							}
+						]
+					}
+				]
+			},
+			{
+				"id": "lev1_ba39a2",
+				"name": "一般向け骨伝導イヤホンの音楽鑑賞（Bone conduction earphones for music listening）",
+				"description": "耳を塞がずに周囲音と音楽を両立する骨伝導イヤホンの利用シナリオ。",
+				"axis": "Purpose",
+				"children": [
+					{
+						"id": "lev2_21d8bf",
+						"name": "高音質音楽再生（High-quality music playback）",
+						"description": "骨伝導での高音質再生を実現する。",
+						"axis": "Function",
+						"children": [
+							{
+								"id": "lev3_b8f6dc",
+								"name": "周波数特性の最適化（Optimization of frequency response）",
+								"description": "音楽再生時の低音・高音域補正。",
+								"axis": "Measure",
+								"children": [
+									{
+										"id": "lev4_f1e35b",
+										"name": "イコライザ回路設計（Equalizer circuit design）",
+										"description": "骨伝導伝送特性に合わせたイコライジング技術。",
+										"axis": "Measure",
+										"children": []
+									}
+								]
+							},
+							{
+								"id": "lev3_8f5bcb",
+								"name": "音漏れ低減（Reduction of sound leakage）",
+								"description": "骨伝導イヤホン特有の音漏れ対策。",
+								"axis": "Measure",
+								"children": [
+									{
+										"id": "lev4_c195ed",
+										"name": "逆位相キャンセリング機構（Anti-phase cancellation mechanism）",
+										"description": "外部への音漏れを逆位相信号で相殺する技術。",
+										"axis": "Measure",
+										"children": []
+									}
+								]
+							}
+						]
+					},
+					{
+						"id": "lev2_7ec18a",
+						"name": "運動・屋外利用での安全確保（Ensuring safety during exercise/outdoor use）",
+						"description": "外音も同時に認識できる安全設計。",
+						"axis": "Function",
+						"children": [
+							{
+								"id": "lev3_f293bc",
+								"name": "周囲音検知・通知（Ambient sound detection and alert）",
+								"description": "自動で危険音を増幅・通知。",
+								"axis": "Measure",
+								"children": [
+									{
+										"id": "lev4_b2137e",
+										"name": "環境音AI判別（AI-based ambient sound recognition）",
+										"description": "車や自転車等の接近をAIで検知し警告。",
+										"axis": "Measure",
+										"children": []
+									}
+								]
+							}
+						]
+					}
+				]
+			},
+			{
+				"id": "lev1_faf93c",
+				"name": "特殊環境での音声通信（Voice communication in special environments）",
+				"description": "騒音や水中など空気伝導が困難な状況下での骨伝導通信利用。",
+				"axis": "Purpose",
+				"children": [
+					{
+						"id": "lev2_c8e419",
+						"name": "騒音環境下での通信（Communication in noisy environments）",
+						"description": "工場・建設現場等でのクリアな音声伝達。",
+						"axis": "Function",
+						"children": [
+							{
+								"id": "lev3_84f28a",
+								"name": "骨伝導マイクロホンの開発（Bone conduction microphone development）",
+								"description": "頭部の骨振動を集音するマイクロホン技術。",
+								"axis": "Measure",
+								"children": [
+									{
+										"id": "lev4_3fd8a1",
+										"name": "ピエゾセンサ高感度化（High sensitivity piezo sensor）",
+										"description": "微細な骨振動も捉える高感度圧電素子技術。",
+										"axis": "Measure",
+										"children": []
+									}
+								]
+							}
+						]
+					},
+					{
+						"id": "lev2_fec429",
+						"name": "水中・防水環境での通信（Communication in underwater/waterproof environments）",
+						"description": "水中でも使用可能な骨伝導デバイスの開発。",
+						"axis": "Function",
+						"children": [
+							{
+								"id": "lev3_91e73c",
+								"name": "防水・耐食設計（Waterproof and anti-corrosion design）",
+								"description": "長期水没・高湿度下でも性能維持できる設計。",
+								"axis": "Measure",
+								"children": [
+									{
+										"id": "lev4_63f9a5",
+										"name": "エポキシ樹脂封止（Epoxy resin encapsulation）",
+										"description": "水の侵入を防ぐピエゾ素子の樹脂封止技術。",
+										"axis": "Measure",
+										"children": []
+									}
+								]
+							}
+						]
+					}
+				]
+			}
+		]
+	},
+	"reasoning": "",
+	"layer_config": ["Scenario", "Purpose", "Function", "Measure"],
+	"scenario_inputs": {
+		"what": null,
+		"who": null,
+		"where": null,
+		"when": null
+	}
+}

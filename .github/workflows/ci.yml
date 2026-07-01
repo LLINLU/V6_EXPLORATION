@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  pull_request:
+defaults:
+  run:
+    shell: bash
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  lint-and-test:
+    name: Lint, Build and Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        # `--ignore-scripts` skips lifecycle scripts (notably the `supabase`
+        # postinstall, which downloads the Supabase CLI binary from GitHub
+        # Releases and intermittently fails with `Z_DATA_ERROR`). This step
+        # only needs the JS packages — the Supabase CLI is not invoked
+        # anywhere in this workflow.
+        run: npm ci --ignore-scripts
+
+      - name: Run Biome lint (errors only)
+        run: npm run check:errors-only
+
+      - name: Run build
+        run: npm run build
+
+      - name: Run tests
+        run: npm run test
+
+  be-lint-and-test:
+    name: BE Lint, Build and Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          # Track Active LTS. Node 20 reached EOL on 2026-04-30.
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: be/package-lock.json
+
+      - name: Install be deps
+        # `--ignore-scripts`: blocks postinstall hooks of any dependency
+        # at install time. Mirrors the be/Dockerfile policy.
+        run: npm ci --ignore-scripts
+        working-directory: be
+
+      - name: Audit production deps
+        # Fail on high/critical CVEs in production deps. Dev deps are
+        # excluded — they only run in trusted CI/dev shells.
+        run: npm audit --audit-level=high --omit=dev
+        working-directory: be
+
+      - name: Verify package signatures
+        # `npm audit signatures` checks npm provenance attestations for
+        # every installed package against the registry. Catches lockfile
+        # tampering and unsigned releases (npm 9.5+).
+        # Advisory until provenance coverage broadens — promote to
+        # blocking once high-traffic deps consistently publish provenance.
+        run: npm audit signatures
+        working-directory: be
+        continue-on-error: true
+
+      - name: Verify schema/migration consistency
+        # Fails the PR if `schema/*.ts` and `migrations/meta/*_snapshot.json`
+        # have diverged (e.g. someone edited the schema TS but forgot to
+        # generate a migration, or vice versa).
+        run: npm run db:check
+        working-directory: be
+
+      - name: Build
+        run: npm run build
+        working-directory: be
+
+      - name: Test
+        run: npm test
+        working-directory: be

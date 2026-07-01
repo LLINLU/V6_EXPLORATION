@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+# set -e
+
+# if ! npm run check:errors-only; then
+# 	printf '\nBiome check failed. Run "npm run fix:biome:status" / "npm run lint:fix:biome" to try auto-fixing.\n'
+# 	exit 1
+# fi
+
+# if ! npm run test; then
+# 	printf '\nTests failed. Run "npm run test" to inspect failures.\n'
+# 	exit 1
+# fi
+
+# if ! npm run build; then
+# 	printf '\nBuild failed. Run "npm run build" before committing.\n'
+# 	exit 1
+# fi

@@ -1,0 +1,117 @@
+# Local dev stack: Postgres + Backend (Express).
+#
+# Frontend (Next.js) runs on the host directly with `npm run dev` — running
+# Next.js inside a macOS Docker bind-mount has too many sharp edges
+# (native binary perms, App Router scandir issues, slow inotify).
+#
+# Quick start:
+#   1) cp be/.env.example be/.env
+#      - Set ANTHROPIC_API_KEY, SQS_QUEUE_URL
+#      - Set CORS_ORIGIN=http://localhost:3000
+#      - Leave DB_HOST blank; DATABASE_URL is injected by this compose file.
+#   2) cp .env.example .env.local  (in repo root)
+#      - Set NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
+#      - Set NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY
+#   3) export AWS_PROFILE=<your-sso-profile>   # if using SSO for SQS
+#      aws sso login --profile $AWS_PROFILE    # refresh as needed (8h)
+#   4) docker compose up --build
+#
+#   In a second terminal (host):
+#      npm install
+#      npm run dev   # → http://localhost:3000
+#
+# URLs:
+#   Frontend  http://localhost:3000   (host, npm run dev)
+#   Backend   http://localhost:3001   (Swagger: /docs)
+#   Postgres  localhost:5432          (user/db: memory_ai, pwd: memory_ai)
+#
+# Worker (optional — same BE image, different command):
+#   docker compose --profile worker up
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: memory_ai
+      POSTGRES_PASSWORD: memory_ai
+      POSTGRES_DB: memory_ai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U memory_ai"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-shot service: applies be/src/db/schema.sql, then exits.
+  # Reuses the BE image so deps are already in place.
+  # env_file is needed because env.ts validates ALL required vars at module
+  # load time — even though migrate itself only uses DATABASE_URL.
+  be-migrate:
+    build:
+      context: ./be
+      dockerfile: Dockerfile.dev
+    env_file:
+      - path: ./be/.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://memory_ai:memory_ai@postgres:5432/memory_ai
+    volumes:
+      - ./be/src:/app/src:cached
+    command: npm run db:migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  be:
+    build:
+      context: ./be
+      dockerfile: Dockerfile.dev
+    env_file:
+      - path: ./be/.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://memory_ai:memory_ai@postgres:5432/memory_ai
+      PORT: "3001"
+      AWS_PROFILE: ${AWS_PROFILE:-default}
+    volumes:
+      - ./be/src:/app/src:cached
+      - ./be/test:/app/test:cached
+      - ./be/tsconfig.json:/app/tsconfig.json:cached
+      - ./be/vitest.config.ts:/app/vitest.config.ts:cached
+      - ./be/package.json:/app/package.json:cached
+      - ${HOME}/.aws:/root/.aws:ro
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      be-migrate:
+        condition: service_completed_successfully
+
+  worker:
+    build:
+      context: ./be
+      dockerfile: Dockerfile.dev
+    env_file:
+      - path: ./be/.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://memory_ai:memory_ai@postgres:5432/memory_ai
+    volumes:
+      - ./be/src:/app/src:cached
+    command: npm run dev
+    profiles:
+      - worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      be-migrate:
+        condition: service_completed_successfully
+
+
+volumes:
+  postgres-data:

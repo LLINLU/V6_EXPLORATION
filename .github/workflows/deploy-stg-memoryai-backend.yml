@@ -1,0 +1,26 @@
+name: Deploy STG memoryai-backend
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-memoryai-backend.yml
+    with:
+      environment: be-stg
+      aws-region: ap-northeast-1
+      ecr-repository: mlab-stg-memoryai-backend
+      ecs-cluster: mlab-stg-memory-ai-ecs-cluster
+      ecs-service: mlab-stg-memoryai-backend-service
+      ecs-task-definition: ./infrastructure/stg/mlab-stg-memoryai-backend-task.json
+      container-name: memoryai-backend
+      ecs-migrate-task-definition: ./infrastructure/stg/mlab-stg-memoryai-migrate-task.json
+      migrate-container-name: memoryai-migrate
+    secrets: inherit

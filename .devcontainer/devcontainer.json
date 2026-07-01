@@ -1,0 +1,27 @@
+{
+	"name": "memory-ai-app",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "app",
+	"workspaceFolder": "/workspace",
+	"forwardPorts": [3000, 3001, 5432],
+	"portsAttributes": {
+		"3000": { "label": "Next.js dev" },
+		"3001": { "label": "be (Scenario Report API)" },
+		"5432": { "label": "Postgres" }
+	},
+	"features": {
+		"ghcr.io/devcontainers-extra/features/deno:1": {}
+	},
+	"postCreateCommand": "npm install && cd be && npm install",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"biomejs.biome",
+				"denoland.vscode-deno",
+				"esbenp.prettier-vscode",
+				"ms-azuretools.vscode-docker"
+			]
+		}
+	},
+	"remoteUser": "node"
+}

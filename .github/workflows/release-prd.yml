@@ -1,0 +1,203 @@
+name: Release PRD
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+concurrency:
+  group: release-prd
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # ── Compute the next semver tag from the latest v*.*.* tag ──────────────────
+  version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      tag: ${{ steps.compute.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute next version
+        id: compute
+        run: |
+          set -euo pipefail
+          LATEST=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1 || echo "v0.0.0")
+          STRIPPED="${LATEST#v}"
+          MAJOR=$(echo "$STRIPPED" | cut -d. -f1)
+          MINOR=$(echo "$STRIPPED" | cut -d. -f2)
+          PATCH=$(echo "$STRIPPED" | cut -d. -f3)
+
+          case "${{ inputs.release_type }}" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+          esac
+
+          TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Latest tag: $LATEST  →  Next (${{ inputs.release_type }}): $TAG"
+
+  # ── Deploy backend (ECS + Fargate) — only runs if FE succeeded ─────────────
+  deploy-backend:
+    needs: [deploy-frontend]
+    uses: ./.github/workflows/_deploy-memoryai-backend.yml
+    with:
+      environment: be-prd
+      aws-region: ap-northeast-1
+      ecr-repository: mlab-prd-memoryai-backend
+      ecs-cluster: mlab-prd-memory-ai-ecs-cluster
+      ecs-service: mlab-prd-memoryai-backend-service
+      ecs-task-definition: ./infrastructure/prd/mlab-prd-memoryai-backend-task.json
+      container-name: memoryai-backend
+      ecs-migrate-task-definition: ./infrastructure/prd/mlab-prd-memoryai-migrate-task.json
+      migrate-container-name: memoryai-migrate
+    secrets: inherit
+
+  # ── Deploy frontend (Amplify from main, not prod branch) ────────────────────
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    environment: be-prd
+    timeout-minutes: 30
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # v6.0.0
+        with:
+          audience: sts.amazonaws.com
+          aws-region: ap-northeast-1
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
+          role-session-name: gh-oidc-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Connect main branch to Amplify PRD (auto-build off)
+        run: |
+          aws amplify create-branch \
+            --app-id "${{ secrets.AMPLIFY_APP_ID_PRD }}" \
+            --branch-name main \
+            --no-enable-auto-build \
+          2>/dev/null || \
+          aws amplify update-branch \
+            --app-id "${{ secrets.AMPLIFY_APP_ID_PRD }}" \
+            --branch-name main \
+            --no-enable-auto-build
+
+      - name: Disable auto-build on prod branch
+        run: |
+          aws amplify update-branch \
+            --app-id "${{ secrets.AMPLIFY_APP_ID_PRD }}" \
+            --branch-name prod \
+            --no-enable-auto-build \
+          2>/dev/null || true
+
+      - name: Trigger Amplify PRD build
+        id: deploy
+        run: |
+          JOB_ID=$(aws amplify start-job \
+            --app-id "${{ secrets.AMPLIFY_APP_ID_PRD }}" \
+            --branch-name main \
+            --job-type RELEASE \
+            --query 'jobSummary.jobId' --output text)
+          echo "job_id=$JOB_ID" >> "$GITHUB_OUTPUT"
+          echo "Started Amplify job: $JOB_ID"
+
+      - name: Wait for Amplify build
+        run: |
+          APP_ID="${{ secrets.AMPLIFY_APP_ID_PRD }}"
+          JOB_ID="${{ steps.deploy.outputs.job_id }}"
+          for i in $(seq 1 30); do
+            STATUS=$(aws amplify get-job \
+              --app-id "$APP_ID" \
+              --branch-name main \
+              --job-id "$JOB_ID" \
+              --query 'job.summary.status' --output text)
+            echo "[$i/30] $STATUS"
+            [ "$STATUS" = "SUCCEED" ] && exit 0
+            if [ "$STATUS" = "FAILED" ] || [ "$STATUS" = "CANCELLED" ]; then
+              echo "::error::Amplify build $STATUS"
+              exit 1
+            fi
+            sleep 60
+          done
+          echo "::error::Amplify build timed out after 30 minutes"
+          exit 1
+
+  # ── Roll back FE if BE fails ─────────────────────────────────────────────────
+  rollback-frontend:
+    needs: [deploy-frontend, deploy-backend]
+    if: needs.deploy-backend.result == 'failure' && needs.deploy-frontend.result == 'success'
+    runs-on: ubuntu-latest
+    environment: be-prd
+    timeout-minutes: 15
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # v6.0.0
+        with:
+          audience: sts.amazonaws.com
+          aws-region: ap-northeast-1
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
+          role-session-name: gh-oidc-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Roll back Amplify to previous successful build
+        run: |
+          APP_ID="${{ secrets.AMPLIFY_APP_ID_PRD }}"
+          PREV_JOB=$(aws amplify list-jobs \
+            --app-id "$APP_ID" \
+            --branch-name main \
+            --query 'jobSummaries[?status==`SUCCEED`] | [1].jobId' \
+            --output text)
+          if [ -z "$PREV_JOB" ] || [ "$PREV_JOB" = "None" ]; then
+            echo "::warning::No previous successful build found to roll back to"
+            exit 0
+          fi
+          echo "Rolling back to job: $PREV_JOB"
+          aws amplify start-job \
+            --app-id "$APP_ID" \
+            --branch-name main \
+            --job-type RETRY \
+            --job-id "$PREV_JOB"
+
+  # ── Tag and publish GitHub release with changelog ───────────────────────────
+  tag-release:
+    needs: [version, deploy-backend, deploy-frontend]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create tag and publish GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ needs.version.outputs.tag }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Production release $TAG"
+          git push origin "$TAG"
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --generate-notes \
+            --latest
+          echo "Released: $TAG"

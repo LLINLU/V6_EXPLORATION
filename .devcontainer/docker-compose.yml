@@ -1,0 +1,50 @@
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/typescript-node:1-20
+    volumes:
+      - ..:/workspace:cached
+      - ~/.aws:/home/node/.aws:ro
+    command: sleep infinity
+    environment:
+      DATABASE_URL: postgresql://memory_ai:memory_ai@postgres:5432/memory_ai
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:3001
+    depends_on:
+      - postgres
+      - backend
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: memory_ai
+      POSTGRES_PASSWORD: memory_ai
+      POSTGRES_DB: memory_ai
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U memory_ai"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../be
+      dockerfile: Dockerfile.dev
+    env_file:
+      - path: ../be/.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://memory_ai:memory_ai@postgres:5432/memory_ai
+      PORT: "3001"
+      CORS_ORIGIN: http://localhost:3000,http://localhost:8080
+    volumes:
+      - ../be/src:/app/src:cached
+      - ../be/test:/app/test:cached
+      - ../be/tsconfig.json:/app/tsconfig.json:cached
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:

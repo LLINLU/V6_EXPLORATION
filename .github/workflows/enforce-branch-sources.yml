@@ -1,0 +1,60 @@
+name: Enforce Branch Sources
+
+on:
+  pull_request:
+    branches:
+      - main
+      - prod
+defaults:
+  run:
+    shell: bash
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate-source-branch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Validate source branch for protected targets
+        env:
+          ACTOR: ${{ github.actor }}
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          is_codeowner=false
+          case "$ACTOR" in
+            joshdanielai|cn-eveer|r4ynode|YUYA556223)
+              is_codeowner=true
+              ;;
+          esac
+
+          case "$BASE_REF" in
+            main)
+              if [[ "$HEAD_REF" == "prod" && "$is_codeowner" == "true" ]]; then
+                exit 0
+              fi
+
+              if [[ ! "$HEAD_REF" =~ .+/.+ ]]; then
+                echo "ERROR: Pull requests into 'main' must come from a branch matching '*/*'."
+                echo "Exception: code owners may also open PRs from 'prod' into 'main'."
+                echo "Received source branch: '$HEAD_REF'"
+                echo "Pull request actor: '$ACTOR'"
+                exit 1
+              fi
+              ;;
+            prod)
+              if [[ "$HEAD_REF" == "main" && "$is_codeowner" == "true" ]]; then
+                exit 0
+              fi
+
+              if [[ ! "$HEAD_REF" =~ ^release/.+ ]]; then
+                echo "ERROR: Pull requests into 'prod' must come from 'release/*' branches."
+                echo "Exception: code owners may also open PRs from 'main' into 'prod'."
+                echo "Received source branch: '$HEAD_REF'"
+                echo "Pull request actor: '$ACTOR'"
+                exit 1
+              fi
+              ;;
+          esac

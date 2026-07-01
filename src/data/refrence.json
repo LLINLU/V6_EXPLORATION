@@ -1,0 +1,201 @@
+{
+	"root": {
+		"id": "root",
+		"name": "Search Theme: ピエゾ素子を使った骨伝導の補聴器・イヤホン",
+		"description": "ピエゾ素子を用いた骨伝導デバイスに関する活用シナリオと、それを実現する技術の階層的整理。",
+		"axis": "Scenario",
+		"children": [
+			{
+				"id": "lev1_a17f3b",
+				"name": "高齢者の聴覚支援（Hearing Support for Elderly）",
+				"description": "加齢性難聴を補う日常使用デバイスとしての利用。",
+				"axis": "Scenario",
+				"children": [
+					{
+						"id": "lev2_b23a9c",
+						"name": "自然な会話理解の実現（Achieve Natural Conversation）",
+						"description": "会話中の音声を明瞭に聞き取れるようにする。",
+						"axis": "Purpose",
+						"children": [
+							{
+								"id": "lev3_c09e8f",
+								"name": "騒音環境下での音声強調（Speech Enhancement in Noise）",
+								"description": "周囲の雑音が多い環境でも声を際立たせる。",
+								"axis": "Function",
+								"children": [
+									{
+										"id": "lev4_d91ec3",
+										"name": "ビームフォーミング処理（Beamforming Audio Processing）",
+										"description": "方向性マイクとDSPで目的話者の音声を抽出。",
+										"axis": "Measure",
+										"children": [
+											{
+												"id": "lev5_ea5612",
+												"name": "指向性マイクアレイ（Directional Microphone Array）",
+												"description": "収音方向を限定して音源を特定。",
+												"axis": "Measure",
+												"children": []
+											},
+											{
+												"id": "lev5_e8ac21",
+												"name": "DSPノイズ抑制アルゴリズム（DSP Noise Suppression）",
+												"description": "環境音成分を信号処理で除去。",
+												"axis": "Measure",
+												"children": []
+											}
+										]
+									},
+									{
+										"id": "lev4_d1fa43",
+										"name": "周波数強調補正（Frequency Compensation）",
+										"description": "聴力に応じた帯域補正を行う。",
+										"axis": "Measure",
+										"children": [
+											{
+												"id": "lev5_eb403d",
+												"name": "オーディオプロファイリング（Audio Profiling）",
+												"description": "個別の聴力特性に基づく調整。",
+												"axis": "Measure",
+												"children": []
+											}
+										]
+									}
+								]
+							},
+							{
+								"id": "lev3_c20fa1",
+								"name": "骨伝導特有の音質補正（Bone Conduction Audio Tuning）",
+								"description": "空気伝導と異なる伝送特性を補う。",
+								"axis": "Function",
+								"children": [
+									{
+										"id": "lev4_d7bc3f",
+										"name": "ピエゾ振動制御技術（Piezo Vibration Control）",
+										"description": "不要な共振を避けて明瞭な振動を生成。",
+										"axis": "Measure",
+										"children": [
+											{
+												"id": "lev5_e3fd11",
+												"name": "フェーズ制御（Phase Control）",
+												"description": "音源との位相差を補正してクリアな音質を実現。",
+												"axis": "Measure",
+												"children": []
+											}
+										]
+									},
+									{
+										"id": "lev4_d8f2a4",
+										"name": "装着部位共振解析（Bone Surface Resonance Analysis）",
+										"description": "装着部位に応じた振動伝播モデルを使用。",
+										"axis": "Measure",
+										"children": []
+									}
+								]
+							}
+						]
+					}
+				]
+			},
+			{
+				"id": "lev1_a28f12",
+				"name": "スポーツ・運動時の外部音把握（Situational Awareness during Exercise）",
+				"description": "音楽を聴きながら周囲音を同時に認知する。",
+				"axis": "Scenario",
+				"children": [
+					{
+						"id": "lev2_b72e59",
+						"name": "安全性の確保（Ensure User Safety）",
+						"description": "交通音や他者の声に気づける状態を保つ。",
+						"axis": "Purpose",
+						"children": [
+							{
+								"id": "lev3_c9f5aa",
+								"name": "環境音透過機能（Ambient Sound Transparency）",
+								"description": "周囲音を遮断せず聞き取り可能にする。",
+								"axis": "Function",
+								"children": [
+									{
+										"id": "lev4_d6a1bc",
+										"name": "低遮音構造設計（Low Occlusion Design）",
+										"description": "耳をふさがない構造設計で外音を自然に取り込む。",
+										"axis": "Measure",
+										"children": [
+											{
+												"id": "lev5_e492ae",
+												"name": "開放型筐体構造（Open Housing Structure）",
+												"description": "外音が遮断されない外装形状。",
+												"axis": "Measure",
+												"children": []
+											}
+										]
+									},
+									{
+										"id": "lev4_d3e1e2",
+										"name": "音源分離技術（Sound Source Separation）",
+										"description": "音楽と周囲音を信号処理で分離・再構成。",
+										"axis": "Measure",
+										"children": [
+											{
+												"id": "lev5_e93210",
+												"name": "スペクトル分析（Spectral Analysis）",
+												"description": "音源の周波数成分を分離抽出。",
+												"axis": "Measure",
+												"children": []
+											}
+										]
+									}
+								]
+							}
+						]
+					}
+				]
+			},
+			{
+				"id": "lev1_a3c8e2",
+				"name": "静かな作業空間での音声通知（Audio Notifications in Quiet Workspaces）",
+				"description": "会議や図書館などで音を可聴化しつつ静かに通知する。",
+				"axis": "Scenario",
+				"children": [
+					{
+						"id": "lev2_b41cb8",
+						"name": "周囲に迷惑をかけない通知（Non-Disruptive Notifications）",
+						"description": "利用者のみに伝わる通知手段の実現。",
+						"axis": "Purpose",
+						"children": [
+							{
+								"id": "lev3_c8d432",
+								"name": "非侵襲音声伝達（Non-Intrusive Audio Transmission）",
+								"description": "音を周囲に漏らさずに伝える。",
+								"axis": "Function",
+								"children": [
+									{
+										"id": "lev4_d71d0e",
+										"name": "骨伝導局所振動制御（Localized Bone Vibration Control）",
+										"description": "骨伝導の伝播を狭い範囲に限定。",
+										"axis": "Measure",
+										"children": []
+									},
+									{
+										"id": "lev4_d98e71",
+										"name": "耳元密着伝導体設計（Tight-Coupled Transducer）",
+										"description": "骨伝導素子と皮膚との密着度を最適化。",
+										"axis": "Measure",
+										"children": []
+									}
+								]
+							}
+						]
+					}
+				]
+			}
+		]
+	},
+	"reasoning": "",
+	"layer_config": ["Scenario", "Purpose", "Function", "Measure"],
+	"scenario_inputs": {
+		"what": null,
+		"who": null,
+		"where": null,
+		"when": null
+	}
+}

@@ -1,0 +1,237 @@
+name: Deploy memoryai-backend (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      aws-region:
+        required: true
+        type: string
+      ecr-repository:
+        required: true
+        type: string
+      ecs-cluster:
+        required: true
+        type: string
+      ecs-service:
+        required: true
+        type: string
+      ecs-task-definition:
+        required: true
+        type: string
+      container-name:
+        required: true
+        type: string
+      ecs-migrate-task-definition:
+        required: true
+        type: string
+      migrate-container-name:
+        required: true
+        type: string
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  generate-image-tag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      image-tag: ${{ steps.generate-tag.outputs.tag }}
+    steps:
+      - name: Generate image tag
+        id: generate-tag
+        run: |
+          TAG="${GITHUB_SHA:0:7}-$(date +%Y%m%d%H%M%S)"
+          echo "tag=$TAG" >> "${GITHUB_OUTPUT}"
+          echo "Generated tag: $TAG"
+
+  build-and-push:
+    runs-on: ubuntu-24.04-arm
+    environment: ${{ inputs.environment }}
+    needs: generate-image-tag
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      image-uri: ${{ steps.build-and-push-image.outputs.image }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # v6.0.0
+        with:
+          audience: sts.amazonaws.com
+          aws-region: ${{ inputs.aws-region }}
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/${{ vars.AWS_ROLE_NAME }}
+          role-session-name: ${{ env.ROLE_SESSION_NAME }}
+        env:
+          ROLE_SESSION_NAME: gh-oidc-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@183a1442edf41672e66566b7fc560e297a290896 # v2.1.1
+
+      - name: Build and Push Docker Image
+        id: build-and-push-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ inputs.ecr-repository }}
+          BUILD_CONTEXT: ./be
+          DOCKERFILE_PATH: ./be/Dockerfile
+          IMAGE_TAG: ${{ needs.generate-image-tag.outputs.image-tag }}
+        run: |
+          ECR_IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+          docker build -t "$ECR_IMAGE_URI" -f "${DOCKERFILE_PATH}" "${BUILD_CONTEXT}"
+          docker push "$ECR_IMAGE_URI"
+          echo "image=$ECR_IMAGE_URI" >> "$GITHUB_OUTPUT"
+
+  db-migrate:
+    # Runs Drizzle migrations as a one-shot ECS Fargate task BEFORE the BE
+    # Service rolling deploy. If this job fails, `deploy` is skipped — that
+    # prevents the "new code shipped against an unmigrated schema" failure
+    #
+    # Idempotent by design: drizzle-orm/migrator skips already-applied
+    # migrations via the `__drizzle_migrations` table, so this job is safe
+    # to run on every deploy even when the schema is unchanged (no-op
+    # completes in well under 10 seconds).
+    runs-on: ubuntu-24.04-arm
+    environment: ${{ inputs.environment }}
+    needs: [generate-image-tag, build-and-push]
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # v6.0.0
+        with:
+          audience: sts.amazonaws.com
+          aws-region: ${{ inputs.aws-region }}
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/${{ vars.AWS_ROLE_NAME }}
+          role-session-name: ${{ env.ROLE_SESSION_NAME }}
+        env:
+          ROLE_SESSION_NAME: gh-oidc-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Render migrate task definition
+        id: migrate-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@77954e213ba1f9f9cb016b86a1d4f6fcdea0d57e # v1.8.4
+        with:
+          task-definition: ${{ inputs.ecs-migrate-task-definition }}
+          container-name: ${{ inputs.migrate-container-name }}
+          image: ${{ needs.build-and-push.outputs.image-uri }}
+
+      - name: Register migrate task definition
+        id: register-migrate
+        env:
+          RENDERED_TASK_DEF: ${{ steps.migrate-task-def.outputs.task-definition }}
+        run: |
+          set -euo pipefail
+          TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json "file://${RENDERED_TASK_DEF}" \
+            --query 'taskDefinition.taskDefinitionArn' --output text)
+          echo "task_def_arn=$TASK_DEF_ARN" >> "$GITHUB_OUTPUT"
+          echo "Registered: $TASK_DEF_ARN"
+
+      - name: Run migrate task
+        id: run-migrate
+        # PRIVATE_SUBNETS / SECURITY_GROUPS are GitHub Environment vars
+        # (Settings → Environments → be-stg | be-prd). Comma-separated, no
+        # spaces. They must match the BE Service's VPC — typically the same
+        # private subnets and BE security group.
+        env:
+          ECS_CLUSTER: ${{ inputs.ecs-cluster }}
+          TASK_DEF_ARN: ${{ steps.register-migrate.outputs.task_def_arn }}
+          PRIVATE_SUBNETS: ${{ vars.PRIVATE_SUBNETS }}
+          SECURITY_GROUPS: ${{ vars.SECURITY_GROUPS }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PRIVATE_SUBNETS:-}" ] || [ -z "${SECURITY_GROUPS:-}" ]; then
+            echo "::error::PRIVATE_SUBNETS or SECURITY_GROUPS env var is empty. Set them in GitHub Settings → Environments → ${{ inputs.environment }}."
+            exit 1
+          fi
+          TASK_ARN=$(aws ecs run-task \
+            --cluster "$ECS_CLUSTER" \
+            --task-definition "$TASK_DEF_ARN" \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${PRIVATE_SUBNETS}],securityGroups=[${SECURITY_GROUPS}],assignPublicIp=DISABLED}" \
+            --query 'tasks[0].taskArn' --output text)
+          if [ -z "$TASK_ARN" ] || [ "$TASK_ARN" = "None" ]; then
+            echo "::error::aws ecs run-task did not return a task ARN"
+            exit 1
+          fi
+          echo "task_arn=$TASK_ARN" >> "$GITHUB_OUTPUT"
+          echo "Started: $TASK_ARN"
+
+      - name: Wait for migrate task to stop
+        env:
+          ECS_CLUSTER: ${{ inputs.ecs-cluster }}
+          TASK_ARN: ${{ steps.run-migrate.outputs.task_arn }}
+        run: |
+          aws ecs wait tasks-stopped \
+            --cluster "$ECS_CLUSTER" \
+            --tasks "$TASK_ARN"
+
+      - name: Check migrate exit code
+        env:
+          ECS_CLUSTER: ${{ inputs.ecs-cluster }}
+          TASK_ARN: ${{ steps.run-migrate.outputs.task_arn }}
+        run: |
+          set -euo pipefail
+          DESC=$(aws ecs describe-tasks \
+            --cluster "$ECS_CLUSTER" \
+            --tasks "$TASK_ARN" \
+            --query 'tasks[0]' --output json)
+          EXIT_CODE=$(echo "$DESC" | jq -r '.containers[0].exitCode // "null"')
+          STOP_REASON=$(echo "$DESC" | jq -r '.stoppedReason // "null"')
+          echo "exit_code=$EXIT_CODE  stopped_reason=$STOP_REASON"
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "::error::Migration task failed (exitCode=$EXIT_CODE, reason=$STOP_REASON)"
+            exit 1
+          fi
+
+  deploy:
+    runs-on: ubuntu-24.04-arm
+    environment: ${{ inputs.environment }}
+    needs: [build-and-push, db-migrate]
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # v6.0.0
+        with:
+          audience: sts.amazonaws.com
+          aws-region: ${{ inputs.aws-region }}
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/${{ vars.AWS_ROLE_NAME }}
+          role-session-name: ${{ env.ROLE_SESSION_NAME }}
+        env:
+          ROLE_SESSION_NAME: gh-oidc-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@77954e213ba1f9f9cb016b86a1d4f6fcdea0d57e # v1.8.4
+        with:
+          task-definition: ${{ inputs.ecs-task-definition }}
+          container-name: ${{ inputs.container-name }}
+          image: ${{ needs.build-and-push.outputs.image-uri }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@fc8fc60f3a60ffd500fcb13b209c59d221ac8c8c # v2.6.1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ inputs.ecs-service }}
+          cluster: ${{ inputs.ecs-cluster }}
+          wait-for-service-stability: true

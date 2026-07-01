@@ -1,0 +1,13 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  # Pool must accommodate GoodJob threads (3) + parallel analysis threads (4) + derived threads (3) + margin
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 15 } %>
+
+production:
+  <<: *default
+  url: "<%= ENV['DATABASE_URL'] %>"
+
+development:
+  <<: *default
+  url: "<%= ENV['DATABASE_URL'] %>"

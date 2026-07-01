@@ -1,0 +1,15 @@
+node_modules
+be/node_modules
+.next
+.git
+.vscode
+.devcontainer
+dist
+be/dist
+coverage
+.env
+.env.local
+.env.*.local
+be/.env
+*.log
+.DS_Store

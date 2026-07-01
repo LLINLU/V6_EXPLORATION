@@ -1,0 +1,413 @@
+{
+  "$schema": "Design Tokens — Color",
+  "$description": "Single source of truth for Memory AI color tokens. Edit this file, then run generate scripts.",
+
+  "primitive": {
+    "white": "#FFFFFF",
+    "black": "#000000",
+
+    "blue": {
+      "$description": "Brand blue palette.",
+      "50": "#EFF6FF",
+      "100": "#DBEAFE",
+      "200": "#BFDBFE",
+      "300": "#93C5FD",
+      "400": "#60A5FA",
+      "500": "#3B82F6",
+      "600": "#2563EB",
+      "700": "#1D4ED8",
+      "800": "#1E40AF",
+      "900": "#1E3A8A"
+    },
+
+    "gray": {
+      "$description": "Neutral gray palette.",
+      "100": "#F3F4F6",
+      "200": "#E5E7EB",
+      "300": "#D1D5DB",
+      "400": "#9CA3AF",
+      "600": "#565656",
+      "700": "#424242",
+      "900": "#262626"
+    },
+
+    "red": {
+      "100": "#FEE2E2",
+      "600": "#DC2626"
+    },
+
+    "green": {
+      "100": "#DCFCE7",
+      "600": "#16A34A"
+    },
+
+    "orange": {
+      "100": "#FFEDD5",
+      "500": "#F97316",
+      "600": "#EA580C"
+    },
+
+    "purple": {
+      "500": "#8B5CF6",
+      "600": "#9151CE"
+    },
+
+    "brand": {
+      "$description": "Project-specific brand values.",
+      "control-blue": "#5F98FF",
+      "blue-subtle": "#F5F9FF",
+      "blue-border": "#CDDEFF",
+      "layout-bg": "#EEEEEE",
+      "purple-border": "#D9C1EF",
+      "purple-subtle": "#FDFBFF",
+      "gold-text": "#694D15",
+      "gold-border": "#C5AE7D",
+      "gold-subtle": "#FFF9F0",
+      "highlight-yellow": "#FBCA17",
+      "sidebar-icon": "#706899",
+      "sidebar-surface": "#F3EDF7",
+      "level-circle": "#5F729E",
+
+      "level-1-bg": "#E8F1FF",
+      "level-1-border": "#90AFF7",
+      "level-1-text": "#0D2965",
+
+      "level-2-bg": "#EFFDFA",
+      "level-2-border": "#97D0CA",
+      "level-2-text": "#0B554F",
+
+      "level-3-bg": "#F9F3FF",
+      "level-3-border": "#DEBBE0",
+      "level-3-text": "#502450",
+
+      "level-4-bg": "#FFFEEF",
+      "level-4-border": "#D9D2BC",
+      "level-4-text": "#31250A",
+
+      "level-5-bg": "#F4FAFE",
+      "level-5-border": "#B2DDFA",
+      "level-5-text": "#242C4E",
+
+      "level-6-bg": "#F5F7FF",
+      "level-6-border": "#BEC8FD",
+      "level-6-text": "#2A247E",
+
+      "custom-node-bg": "#FFF4CB",
+      "custom-node-border": "#3D3030",
+      "custom-node-text": "#554444"
+    }
+  },
+
+  "semantic": {
+    "primary": {
+      "DEFAULT": "{primitive.blue.600}",
+      "hover": "{primitive.blue.700}",
+      "strong": "{primitive.blue.800}",
+      "darkest": "{primitive.blue.900}",
+      "foreground": "{primitive.white}"
+    },
+
+    "surface": {
+      "$description": "Background surfaces. Routes to Tailwind backgroundColor — class names are bg-subtle, bg-muted, etc. (no 'surface' in the class).",
+      "DEFAULT": "{primitive.white}",
+      "secondary": "{primitive.gray.100}",
+      "muted": "{primitive.brand.layout-bg}",
+      "info": "{primitive.brand.blue-subtle}",
+      "info-strong": "{primitive.blue.50}",
+      "elevated": "{primitive.white}"
+    },
+
+    "text": {
+      "$description": "Text colors. Routes to Tailwind textColor — class names are text-secondary, text-muted, etc. (no 'text-text' redundancy).",
+      "DEFAULT": "{primitive.gray.900}",
+      "secondary": "{primitive.gray.600}",
+      "muted": "{primitive.gray.400}",
+      "icon": "{primitive.gray.700}",
+      "inverse": "{primitive.white}"
+    },
+
+    "edge": {
+      "$description": "Border colors. Routes to Tailwind borderColor — class names are border-subtle, border-focus, etc. (no 'border-edge' redundancy).",
+      "DEFAULT": "{primitive.gray.200}",
+      "subtle": "{primitive.gray.300}",
+      "focus": "{primitive.brand.control-blue}",
+      "info": "{primitive.brand.blue-border}"
+    },
+
+    "accent": {
+      "purple": "{primitive.purple.500}",
+      "purple-text": "{primitive.purple.600}",
+      "purple-border": "{primitive.brand.purple-border}",
+      "purple-subtle": "{primitive.brand.purple-subtle}"
+    },
+
+    "gold": {
+      "text": "{primitive.brand.gold-text}",
+      "border": "{primitive.brand.gold-border}",
+      "subtle": "{primitive.brand.gold-subtle}"
+    },
+
+    "success": {
+      "DEFAULT": "{primitive.green.600}",
+      "subtle": "{primitive.green.100}",
+      "foreground": "{primitive.green.600}",
+      "line": "{primitive.green.100}"
+    },
+
+    "warning": {
+      "DEFAULT": "{primitive.orange.600}",
+      "bright": "{primitive.orange.500}",
+      "subtle": "{primitive.orange.100}",
+      "foreground": "{primitive.orange.600}",
+      "line": "{primitive.orange.100}"
+    },
+
+    "error": {
+      "DEFAULT": "{primitive.red.600}",
+      "subtle": "{primitive.red.100}",
+      "foreground": "{primitive.red.600}",
+      "line": "{primitive.red.100}"
+    },
+
+    "highlight": "{primitive.brand.highlight-yellow}"
+  },
+
+  "element": {
+    "button-primary": {
+      "bg": "{semantic.primary.DEFAULT}",
+      "bg-hover": "{semantic.primary.hover}",
+      "text": "{semantic.primary.foreground}"
+    },
+    "button-ghost": {
+      "text": "{semantic.text.secondary}",
+      "bg-hover": "{semantic.surface.secondary}"
+    },
+    "button-disabled": {
+      "bg": "{primitive.brand.layout-bg}",
+      "text": "{semantic.text.muted}"
+    },
+
+    "input": {
+      "bg": "{primitive.white}",
+      "border": "{semantic.edge.DEFAULT}",
+      "ring": "{semantic.edge.focus}",
+      "placeholder": "{semantic.text.muted}"
+    },
+
+    "card": {
+      "bg": "{semantic.surface.elevated}",
+      "border": "{semantic.edge.DEFAULT}"
+    },
+
+    "checkbox": {
+      "border": "{primitive.brand.control-blue}",
+      "checked-bg": "{primitive.brand.control-blue}",
+      "checked-text": "{primitive.white}"
+    },
+    "toggle": {
+      "checked-bg": "{primitive.brand.control-blue}",
+      "unchecked-bg": "{primitive.gray.300}"
+    },
+
+    "badge-scenario": {
+      "bg": "{primitive.brand.control-blue}",
+      "text": "{primitive.white}"
+    },
+    "badge-count": {
+      "bg": "{primitive.gray.300}",
+      "text": "{semantic.text.secondary}"
+    },
+    "badge-tag": {
+      "bg": "{semantic.surface.secondary}",
+      "text": "{semantic.text.secondary}"
+    },
+    "badge-update": {
+      "bg": "{semantic.success.subtle}",
+      "text-color": "{primitive.green.600}",
+      "border": "{primitive.green.100}"
+    },
+
+    "tab-active": {
+      "bg": "{primitive.blue.50}",
+      "text": "{primitive.brand.control-blue}"
+    },
+    "tab-inactive": {
+      "bg": "{primitive.white}",
+      "text": "{semantic.text.muted}"
+    },
+
+    "info-panel": {
+      "bg": "{semantic.surface.info}"
+    },
+
+    "sidebar": {
+      "bg": "{primitive.white}",
+      "icon-stroke": "{primitive.brand.sidebar-icon}",
+      "icon-bg": "{primitive.brand.sidebar-surface}"
+    },
+
+    "mode-ted": {
+      "text": "{primitive.blue.700}",
+      "bg": "{primitive.blue.50}",
+      "border": "{semantic.edge.info}"
+    },
+    "mode-fast": {
+      "text": "{semantic.accent.purple-text}",
+      "bg": "{semantic.accent.purple-subtle}",
+      "border": "{semantic.accent.purple-border}"
+    },
+
+    "node-selected": {
+      "bg": "{semantic.primary.DEFAULT}",
+      "text": "{primitive.white}",
+      "highlight-border": "{semantic.highlight}"
+    },
+    "node-root": {
+      "bg": "#F2F2F28C",
+      "border": "{primitive.gray.300}",
+      "text": "{primitive.gray.900}"
+    },
+    "node-default": {
+      "bg": "{primitive.blue.50}",
+      "text": "{primitive.gray.900}",
+      "border": "{primitive.gray.900}"
+    },
+    "node-custom": {
+      "bg": "{primitive.brand.custom-node-bg}",
+      "border": "{primitive.brand.custom-node-border}",
+      "text": "{primitive.brand.custom-node-text}"
+    },
+    "node-level-1": {
+      "bg": "{primitive.brand.level-1-bg}",
+      "border": "{primitive.brand.level-1-border}",
+      "text": "{primitive.brand.level-1-text}"
+    },
+    "node-level-2": {
+      "bg": "{primitive.brand.level-2-bg}",
+      "border": "{primitive.brand.level-2-border}",
+      "text": "{primitive.brand.level-2-text}"
+    },
+    "node-level-3": {
+      "bg": "{primitive.brand.level-3-bg}",
+      "border": "{primitive.brand.level-3-border}",
+      "text": "{primitive.brand.level-3-text}"
+    },
+    "node-level-4": {
+      "bg": "{primitive.brand.level-4-bg}",
+      "border": "{primitive.brand.level-4-border}",
+      "text": "{primitive.brand.level-4-text}"
+    },
+    "node-level-5": {
+      "bg": "{primitive.brand.level-5-bg}",
+      "border": "{primitive.brand.level-5-border}",
+      "text": "{primitive.brand.level-5-text}"
+    },
+    "node-level-6": {
+      "bg": "{primitive.brand.level-6-bg}",
+      "border": "{primitive.brand.level-6-border}",
+      "text": "{primitive.brand.level-6-text}"
+    },
+
+    "trl-early": {
+      "color": "{primitive.blue.300}",
+      "border": "{primitive.blue.300}"
+    },
+    "trl-mid": {
+      "color": "{primitive.blue.400}",
+      "border": "{primitive.blue.400}"
+    },
+    "trl-mature": {
+      "color": "{primitive.blue.500}",
+      "border": "{primitive.blue.500}"
+    },
+
+    "cagr-neutral": {
+      "text": "{semantic.text.muted}",
+      "bg": "{semantic.surface.secondary}"
+    },
+    "cagr-positive": {
+      "text": "{semantic.success.DEFAULT}",
+      "bg": "{semantic.success.subtle}"
+    },
+    "cagr-high": {
+      "text": "{semantic.primary.DEFAULT}",
+      "bg": "{primitive.blue.100}"
+    },
+    "cagr-negative": {
+      "text": "{semantic.error.DEFAULT}",
+      "bg": "{semantic.error.subtle}"
+    },
+    "cagr-warning": {
+      "text": "{semantic.warning.DEFAULT}",
+      "bg": "{semantic.warning.subtle}"
+    },
+
+    "market-monopoly": {
+      "text": "{semantic.error.DEFAULT}",
+      "bg": "{semantic.error.subtle}"
+    },
+    "market-oligopoly": {
+      "text": "{semantic.warning.DEFAULT}",
+      "bg": "{semantic.warning.subtle}"
+    },
+    "market-competitive": {
+      "text": "{semantic.success.DEFAULT}",
+      "bg": "{semantic.success.subtle}"
+    },
+
+    "tam-xs": {
+      "bg": "{primitive.blue.200}",
+      "text": "{primitive.blue.800}"
+    },
+    "tam-sm": {
+      "bg": "{primitive.blue.400}",
+      "text": "{primitive.blue.900}"
+    },
+    "tam-md": {
+      "bg": "{primitive.blue.500}",
+      "text": "{primitive.blue.900}"
+    },
+    "tam-lg": {
+      "bg": "{primitive.blue.900}",
+      "text": "{primitive.blue.100}"
+    },
+    "tam-default": {
+      "bg": "{primitive.blue.100}",
+      "text": "{primitive.blue.800}"
+    },
+
+    "ai-gradient": {
+      "from": "{semantic.primary.DEFAULT}",
+      "to": "{semantic.accent.purple}"
+    },
+
+    "mention": {
+      "bg": "rgba(59, 130, 246, 0.15)",
+      "text": "{primitive.blue.800}",
+      "border": "rgba(59, 130, 246, 0.3)"
+    },
+    "mention-user": {
+      "bg": "rgba(255, 255, 255, 0.9)",
+      "text": "{primitive.blue.800}",
+      "border": "rgba(255, 255, 255, 0.8)"
+    },
+
+    "query-gold-button": {
+      "bg": "{semantic.gold.subtle}",
+      "text": "{semantic.gold.text}",
+      "border": "{semantic.gold.border}"
+    },
+    "query-blue-button": {
+      "bg": "{semantic.surface.info}",
+      "text": "{semantic.primary.strong}",
+      "border": "{semantic.edge.info}"
+    },
+
+    "scrollbar": {
+      "track": "{semantic.surface.secondary}",
+      "thumb": "{semantic.text.muted}"
+    },
+
+    "level-circle": "{primitive.brand.level-circle}"
+  }
+}

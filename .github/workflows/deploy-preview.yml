@@ -1,0 +1,120 @@
+name: Deploy Preview
+
+on:
+  workflow_dispatch:
+defaults:
+  run:
+    shell: bash
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  deploy:
+    name: Connect Branch & Trigger Amplify Preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: dev
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+    permissions:
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # v6.0.0
+        with:
+          audience: sts.amazonaws.com
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
+          role-session-name: ${{ env.ROLE_SESSION_NAME }}
+        env:
+          ROLE_SESSION_NAME: gh-oidc-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Connect branch to Amplify with auto-build enabled
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+          echo "Connecting branch: $BRANCH"
+
+          aws amplify create-branch \
+            --app-id ${{ secrets.AMPLIFY_APP_ID_STG }} \
+            --branch-name "$BRANCH" \
+            --enable-auto-build \
+            --no-enable-basic-auth \
+          2>/dev/null || \
+          aws amplify update-branch \
+            --app-id ${{ secrets.AMPLIFY_APP_ID_STG }} \
+            --branch-name "$BRANCH" \
+            --enable-auto-build
+
+      - name: Trigger deployment
+        run: |
+          aws amplify start-job \
+            --app-id ${{ secrets.AMPLIFY_APP_ID_STG }} \
+            --branch-name "$BRANCH" \
+            --job-type RELEASE
+
+      - name: Comment on open PRs for this branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APP_ID: ${{ secrets.AMPLIFY_APP_ID_STG }}
+          BASIC_AUTH_USER: ${{ secrets.AMPLIFY_BASIC_AUTH_USER }}
+          BASIC_AUTH_PASSWORD: ${{ secrets.AMPLIFY_BASIC_AUTH_PASSWORD }}
+        run: |
+          BRANCH_SLUG=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')
+          HOST="${BRANCH_SLUG}.${APP_ID}.amplifyapp.com"
+
+          # Resolve the Basic-auth credentials to embed in the link as
+          # https://user:pass@host. Prefer the repo secrets; if they're not set,
+          # fall back to reading them from Amplify (branch, then app level).
+          # If neither source has credentials, post the plain URL.
+          USER_RAW=""
+          PASS_RAW=""
+          if [ -n "$BASIC_AUTH_USER" ] && [ -n "$BASIC_AUTH_PASSWORD" ]; then
+            USER_RAW="$BASIC_AUTH_USER"
+            PASS_RAW="$BASIC_AUTH_PASSWORD"
+          else
+            CREDS_B64=$(aws amplify get-branch --app-id "$APP_ID" --branch-name "$BRANCH" \
+              --query 'branch.basicAuthCredentials' --output text 2>/dev/null || true)
+            if [ -z "$CREDS_B64" ] || [ "$CREDS_B64" = "None" ]; then
+              CREDS_B64=$(aws amplify get-app --app-id "$APP_ID" \
+                --query 'app.basicAuthCredentials' --output text 2>/dev/null || true)
+            fi
+            if [ -n "$CREDS_B64" ] && [ "$CREDS_B64" != "None" ]; then
+              CREDS=$(printf '%s' "$CREDS_B64" | base64 -d 2>/dev/null || true)
+              USER_RAW="${CREDS%%:*}"
+              PASS_RAW="${CREDS#*:}"
+            fi
+          fi
+
+          AUTH_PREFIX=""
+          if [ -n "$USER_RAW" ]; then
+            # Keep the secret out of the Actions logs (it still goes in the PR comment).
+            echo "::add-mask::$PASS_RAW"
+            # URL-encode each component so special chars survive in the userinfo.
+            USER_ENC=$(jq -rn --arg s "$USER_RAW" '$s|@uri')
+            PASS_ENC=$(jq -rn --arg s "$PASS_RAW" '$s|@uri')
+            AUTH_PREFIX="${USER_ENC}:${PASS_ENC}@"
+          fi
+
+          PREVIEW_URL="https://${AUTH_PREFIX}${HOST}"
+
+          PR_NUMBERS=$(gh pr list --repo ${{ github.repository }} --head "$BRANCH" --state open --json number --jq '.[].number')
+
+          if [ -z "$PR_NUMBERS" ]; then
+            echo "No open PRs found for branch $BRANCH"
+            exit 0
+          fi
+
+          for PR in $PR_NUMBERS; do
+            echo "Commenting on PR #$PR"
+            gh pr comment "$PR" \
+              --repo ${{ github.repository }} \
+              --body "🚀 **Amplify Preview deploying** (\`staging\`)
+              Branch: \`$BRANCH\`
+              Preview URL: $PREVIEW_URL
+
+              > This link embeds the preview access credentials — keep it within the team, don't share publicly.
+              > Build is in progress — the link will be live in a few minutes. Subsequent pushes to this branch will update automatically."
+          done

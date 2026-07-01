@@ -1,0 +1,57 @@
+{
+  "family": "mlab-stg-memoryai-migrate-task",
+  "containerDefinitions": [
+    {
+      "name": "memoryai-migrate",
+      "image": "143063372306.dkr.ecr.ap-northeast-1.amazonaws.com/mlab-stg-memoryai-backend:PLACEHOLDER",
+      "cpu": 0,
+      "essential": true,
+      "command": ["node", "dist/db/migrate.js"],
+      "environment": [
+        { "name": "NODE_ENV", "value": "production" },
+        { "name": "APP_ENV", "value": "stg" },
+        { "name": "PORT", "value": "8080" },
+        { "name": "LOG_LEVEL", "value": "info" },
+        { "name": "CORS_ORIGIN", "value": "https://stg.memoryai.jp" },
+        { "name": "CORS_ORIGIN_PATTERN", "value": "^https://[^.]+\\.djqagj8shabc6\\.amplifyapp\\.com$" },
+        { "name": "AWS_REGION", "value": "ap-northeast-1" },
+        { "name": "SQS_QUEUE_URL", "value": "https://sqs.ap-northeast-1.amazonaws.com/143063372306/mlab-stg-memoryai-backend.fifo" },
+        { "name": "DB_HOST", "value": "mlab-stg-memoryai-db.cluster-c3g2aouugqts.ap-northeast-1.rds.amazonaws.com" },
+        { "name": "DB_PORT", "value": "5432" },
+        { "name": "DB_NAME", "value": "memoryai" },
+        { "name": "DB_USER", "value": "memoryai_app" },
+        { "name": "DB_REGION", "value": "ap-northeast-1" },
+        { "name": "FREE_MONTHLY_REPORT_LIMIT", "value": "5" },
+        { "name": "UNLIMITED_USER_IDS", "value": "" }
+      ],
+      "secrets": [
+        {
+          "name": "ANTHROPIC_API_KEY",
+          "valueFrom": "arn:aws:ssm:ap-northeast-1:143063372306:parameter/stg/memoryai/anthropic-api-key"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/mlab-stg-memoryai-migrate",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-stream-prefix": "migrate"
+        }
+      },
+      "readonlyRootFilesystem": true,
+      "linuxParameters": {
+        "initProcessEnabled": true
+      }
+    }
+  ],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::143063372306:role/mlab-stg-memoryai-backend-ecs-task-execution-role",
+  "taskRoleArn": "arn:aws:iam::143063372306:role/mlab-stg-memoryai-backend-ecs-task-role",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "runtimePlatform": {
+    "cpuArchitecture": "ARM64",
+    "operatingSystemFamily": "LINUX"
+  }
+}
