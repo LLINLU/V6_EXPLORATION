@@ -825,24 +825,22 @@ function renderRow({
 							: "bg-amber-50 border-amber-200"
 				const trlDef = THEME_TRL_DEFS.find((d) => d.level === trlNum)
 				const chart = (
-					<div className="flex flex-col gap-1">
-						<span className={`text-sm font-bold ${textColor}`}>{trlNum}</span>
-						<div className="flex items-end gap-0.5 h-6 w-full">
-							{Array.from({ length: 9 }, (_, i) => {
-								const level = i + 1
-								const filled = level <= trlNum
-								return (
-									<div
-										key={i}
-										className="w-1.5 shrink-0 rounded-sm"
-										style={{
-											height: filled ? "100%" : "30%",
-											background: filled ? TRL_SEGMENT_COLORS[i] : "#e5e7eb",
-										}}
-									/>
-								)
-							})}
-						</div>
+					<div className="flex items-center gap-1">
+						{Array.from({ length: 9 }, (_, i) => {
+							const filled = i < trlNum
+							return (
+								<div
+									key={i}
+									className="rounded-full shrink-0"
+									style={{
+										width: filled ? 10 : 7,
+										height: filled ? 10 : 7,
+										background: filled ? TRL_SEGMENT_COLORS[i] : "#e5e7eb",
+									}}
+								/>
+							)
+						})}
+						<span className="text-sm text-gray-400 ml-1 tabular-nums">{trlNum}</span>
 					</div>
 				)
 				const trlButton = (
