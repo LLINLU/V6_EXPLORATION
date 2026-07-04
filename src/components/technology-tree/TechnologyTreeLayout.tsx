@@ -40,6 +40,7 @@ interface TechnologyTreeLayoutProps {
 	query?: string // <-- Add query prop
 	treeMode?: string // <-- Add treeMode prop
 	treeId?: string
+	navbarContent?: React.ReactNode
 }
 
 const TechnologyTreeLayoutWrapper = memo((props: TechnologyTreeLayoutProps) => {
@@ -59,6 +60,7 @@ const TechnologyTreeLayoutWrapper = memo((props: TechnologyTreeLayoutProps) => {
 		query, // <-- Receive query
 		treeMode, // <-- Receive treeMode
 		treeId, // <-- Receive treeId
+		navbarContent,
 	} = props
 
 	const { userDetails } = useUserDetail()
@@ -79,7 +81,9 @@ const TechnologyTreeLayoutWrapper = memo((props: TechnologyTreeLayoutProps) => {
 
 				<div className="flex-1 overflow-hidden flex flex-col gap-1">
 					{/* Query Display Section - appears first */}
-					{userDetails ? (
+					{navbarContent ? (
+						<div className="flex-shrink-0">{navbarContent}</div>
+					) : userDetails ? (
 						<div className="bg-white rounded-lg px-4 py-2 flex items-center justify-between flex-shrink-0">
 							<div className="flex items-center gap-2">
 								<Button
@@ -132,6 +136,7 @@ const TechnologyTreeLayoutWrapper = memo((props: TechnologyTreeLayoutProps) => {
 							</div>
 						</div>
 					) : null}
+
 
 					<ResizablePanelGroup
 						direction="horizontal"

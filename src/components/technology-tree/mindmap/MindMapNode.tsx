@@ -1,7 +1,23 @@
 import { Minus, Trash2 } from "lucide-react"
+
+const TRL_META: Record<number, { label: string; bg: string }> = {
+	1: { label: "基礎研究",   bg: "#fecaca" },
+	2: { label: "基礎研究",   bg: "#fed7aa" },
+	3: { label: "基礎研究",   bg: "#fef08a" },
+	4: { label: "実証段階",   bg: "#d9f99d" },
+	5: { label: "実証段階",   bg: "#bbf7d0" },
+	6: { label: "実証段階",   bg: "#99f6e4" },
+	7: { label: "商業化済み", bg: "#a5f3fc" },
+	8: { label: "商業化済み", bg: "#bae6fd" },
+	9: { label: "商業化済み", bg: "#bfdbfe" },
+}
+function getTrlMeta(trl: number) {
+	return TRL_META[trl] ?? TRL_META[3]
+}
 import type React from "react"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { getLevelColor as getUtilLevelColor } from "@/components/technology-tree/utils/levelColors"
+import { useTreeUIStore } from "@/stores/treeUIStore"
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -100,6 +116,7 @@ export const MindMapNodeComponent: React.FC<MindMapNodeProps> = ({
 }) => {
 	const { toast } = useToast()
 	const { subscribe, unsubscribe } = useEnrichedData(node.id)
+	const trlColorMode = useTreeUIStore((s) => s.trlColorMode)
 	const [isWholeAreaHovered, setIsWholeAreaHovered] = useState(false)
 	const [isSubscribed, setIsSubscribed] = useState(false)
 	const [isExpandButtonHovered, setIsExpandButtonHovered] = useState(false)
@@ -116,6 +133,10 @@ export const MindMapNodeComponent: React.FC<MindMapNodeProps> = ({
 	// Memoized calculations
 	const layoutConfig =
 		LAYOUT_CONSTANTS[layoutDirection.toUpperCase() as "HORIZONTAL" | "VERTICAL"]
+
+	const trlBg = trlColorMode && node.trl !== undefined && !node.isSelected
+		? getTrlMeta(node.trl).bg
+		: undefined
 
 	const nodeStyles = useMemo(
 		() => ({
@@ -273,6 +294,7 @@ export const MindMapNodeComponent: React.FC<MindMapNodeProps> = ({
 			>
 				<div
 					className={`w-full h-full rounded-lg border flex flex-col justify-center relative ${nodeStyles.colorClasses} p-2`}
+					style={trlBg ? { background: trlBg } : undefined}
 				>
 					{/* Node Title */}
 					<div
@@ -283,6 +305,18 @@ export const MindMapNodeComponent: React.FC<MindMapNodeProps> = ({
 					>
 						{node.name}
 					</div>
+
+					{/* TRL badge */}
+					{!nodeFlags.isRoot && trlColorMode && node.trl !== undefined && (() => {
+						const { label, bg } = getTrlMeta(node.trl)
+						return (
+							<div className="flex justify-center mt-1">
+								<span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium text-gray-700" style={{ background: bg }}>
+									TRL {node.trl} · {label}
+								</span>
+							</div>
+						)
+					})()}
 
 					{/* Loading Indicators */}
 					{nodeFlags.isGenerating && (

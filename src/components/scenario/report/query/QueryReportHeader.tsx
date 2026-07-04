@@ -384,7 +384,7 @@ export function QueryReportHeader({
 								<span>シナリオを探索する</span>
 							</DropdownMenuItem>
 							<DropdownMenuItem
-								onSelect={() => navigate("/technology-tree")}
+								onSelect={() => navigate("/v1/treemap")}
 								className="flex items-center justify-between px-3 py-2 text-sm cursor-pointer"
 							>
 								<span>ツリーマップを直接生成する</span>

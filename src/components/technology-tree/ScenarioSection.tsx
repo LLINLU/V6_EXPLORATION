@@ -31,7 +31,7 @@ export const ScenarioSection = ({
 	const labels =
 		treeMode === "FAST"
 			? {
-					title: "Technology：",
+					title: "技術の構成要素：",
 					editTitle: "Technologyを編集",
 					editScreenReader: "Technologyを編集",
 				}

@@ -187,7 +187,7 @@ const EN: typeof JA = {
 		openDoi: "Open DOI link",
 	},
 	section05: {
-		title: "Technology Structure",
+		title: "技術の分析フレームワーク",
 		commercialized: "A Commercialized",
 		demonstrated: "B Demonstrated",
 		basicResearch: "C Basic Research",

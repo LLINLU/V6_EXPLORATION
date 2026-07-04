@@ -215,6 +215,32 @@ export const MindMapRenderer: React.FC<MindMapRendererProps> = ({
 				</div>
 			</div>
 
+			{/* TRL colour toggle */}
+			{toolbarOrientation !== "horizontal" && (() => {
+				const { trlColorMode, toggleTrlColorMode } = uiStore
+				return (
+					<button
+						type="button"
+						onClick={toggleTrlColorMode}
+						className="absolute top-4 right-4 z-40 inline-flex items-center gap-2 text-xs font-medium text-gray-700"
+					>
+						TRL カラー
+						{/* Track */}
+						<span
+							className="relative inline-flex h-4 w-7 shrink-0 rounded-full transition-colors duration-200"
+							style={{ background: trlColorMode ? "#b29dc4" : "#d1d5db" }}
+						>
+							{/* Thumb */}
+							<span
+								className={`absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-transform duration-200 ${
+									trlColorMode ? "translate-x-3.5" : "translate-x-0.5"
+								}`}
+							/>
+						</span>
+					</button>
+				)
+			})()}
+
 			{/* Mind Map Controls */}
 			<div
 				className={`absolute bg-white/90 backdrop-blur-sm rounded-lg border z-40 ${

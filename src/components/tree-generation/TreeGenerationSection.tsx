@@ -199,7 +199,7 @@ export const TreeGenerationSection = () => {
 
 		// TED + showTreeFirst: show mindmap tree first, skip characteristics dialog
 		if (showTreeFirst) {
-			navigate("/technology-tree")
+			navigate("/v1/treemap")
 			return
 		}
 

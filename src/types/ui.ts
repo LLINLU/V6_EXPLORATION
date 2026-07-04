@@ -37,6 +37,7 @@ export interface MindMapNode {
 	hasChildren?: boolean
 	hasChildrenInOriginalData?: boolean
 	totalChildrenCount?: number
+	trl?: number
 }
 
 export interface MindMapConnection {

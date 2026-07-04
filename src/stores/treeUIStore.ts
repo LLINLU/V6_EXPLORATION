@@ -27,6 +27,9 @@ interface TreeUIState {
 
 	// Chat UI state
 	chatBoxOpen: boolean
+
+	// TRL color mode
+	trlColorMode: boolean
 }
 
 interface TreeUIActions {
@@ -65,6 +68,9 @@ interface TreeUIActions {
 	setChatBoxOpen: (open: boolean) => void
 	toggleChatBoxOpen: () => void
 
+	// TRL color mode
+	toggleTrlColorMode: () => void
+
 	// Initialization action (from useTreeEffects)
 	initializeUI: () => void
 }
@@ -86,6 +92,7 @@ export const useTreeUIStore = create<TreeUIState & TreeUIActions>(
 		mindmapPanZoomState: { zoom: 1, panX: 0, panY: 0 },
 		justSwitchedView: false,
 		chatBoxOpen: false,
+		trlColorMode: false,
 
 		// Actions
 		toggleView: () =>
@@ -149,6 +156,9 @@ export const useTreeUIStore = create<TreeUIState & TreeUIActions>(
 		setChatBoxOpen: (open: boolean) => set({ chatBoxOpen: open }),
 		toggleChatBoxOpen: () =>
 			set((state) => ({ chatBoxOpen: !state.chatBoxOpen })),
+
+		toggleTrlColorMode: () =>
+			set((state) => ({ trlColorMode: !state.trlColorMode })),
 
 		// Initialization action (from useTreeEffects)
 		initializeUI: () => {

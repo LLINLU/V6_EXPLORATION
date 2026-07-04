@@ -19,6 +19,7 @@ interface HierarchicalNode {
 	isSelected: boolean
 	isCustom: boolean
 	children_count?: number
+	trl?: number
 	children: HierarchicalNode[]
 }
 
@@ -78,6 +79,7 @@ const createHierarchicalNode = (
 		isSelected: isSelectedByPath || isSelectedByHighlight,
 		isCustom: item.isCustom || false,
 		children_count: item.children_count,
+		trl: item.trl,
 		children: [],
 	}
 }
@@ -319,7 +321,8 @@ const createD3Nodes = (
 			isSelected: node.data.isSelected,
 			isCustom: node.data.isCustom,
 			children_count: node.data.children_count,
-			hasChildren: node.children && node.children.length > 0, // 子ノードがあるかどうか
+			trl: node.data.trl,
+			hasChildren: node.children && node.children.length > 0,
 			hasChildrenInOriginalData: originalHierarchy
 				? hasChildrenInOriginalHierarchy(node.data.id, originalHierarchy)
 				: node.children && node.children.length > 0,
@@ -349,22 +352,23 @@ const createD3Nodes = (
 			description: node.data.description,
 			level: node.data.level,
 			levelName: node.data.levelName,
-			x: (node.x ?? 0) + MARGIN_LEFT, // New vertical flow - x is horizontal position
-			y: (node.y ?? 0) + MARGIN_TOP, // New vertical flow - y is vertical position (flows downward)
+			x: (node.x ?? 0) + MARGIN_LEFT,
+			y: (node.y ?? 0) + MARGIN_TOP,
 			parentId: node.parent ? node.parent.data.id : undefined,
 			isSelected: node.data.isSelected,
 			isCustom: node.data.isCustom,
 			children_count: node.data.children_count,
-			hasChildren: node.children && node.children.length > 0, // 子ノードがあるかどうか
+			trl: node.data.trl,
+			hasChildren: node.children && node.children.length > 0,
 			hasChildrenInOriginalData: originalHierarchy
 				? hasChildrenInOriginalHierarchy(node.data.id, originalHierarchy)
-				: node.children && node.children.length > 0, // 元データで子ノードがあるかどうか
-			isExpanded: isNodeExpanded(node.data.id, expandedNodes), // 実際の展開状態
+				: node.children && node.children.length > 0,
+			isExpanded: isNodeExpanded(node.data.id, expandedNodes),
 			totalChildrenCount: originalHierarchy
 				? countTotalChildrenInOriginalHierarchy(node.data.id, originalHierarchy)
 				: node.children
 					? node.children.length
-					: 0, // 元データでの総子ノード数
+					: 0,
 		}))
 	}
 }

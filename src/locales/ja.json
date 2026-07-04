@@ -913,11 +913,11 @@
 			"csv_tech_element": "技術要素{{n}}",
 			"csv_description": "説明",
 			"fast": {
-				"level1": "技術要素1",
-				"level2": "技術要素2",
-				"level3": "技術要素3",
-				"level4": "技術要素4",
-				"level5": "技術要素5"
+				"level1": "実現手法",
+				"level2": "構成技術1",
+				"level3": "構成技術2",
+				"level4": "構成技術3",
+				"level5": "構成技術4"
 			},
 			"ted": {
 				"level5": "手段2"

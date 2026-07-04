@@ -13,6 +13,19 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useTreeUIStore } from "@/stores/treeUIStore"
+
+const TRL_LEGEND = [
+	{ trl: 1, label: "基礎研究",   bg: "#fecaca" },
+	{ trl: 2, label: "基礎研究",   bg: "#fed7aa" },
+	{ trl: 3, label: "基礎研究",   bg: "#fef08a" },
+	{ trl: 4, label: "実証段階",   bg: "#d9f99d" },
+	{ trl: 5, label: "実証段階",   bg: "#bbf7d0" },
+	{ trl: 6, label: "実証段階",   bg: "#99f6e4" },
+	{ trl: 7, label: "商業化済み", bg: "#a5f3fc" },
+	{ trl: 8, label: "商業化済み", bg: "#bae6fd" },
+	{ trl: 9, label: "商業化済み", bg: "#bfdbfe" },
+]
 
 interface MindMapLegendProps {
 	treeMode?: string
@@ -31,6 +44,7 @@ const MindMapLegendComponent: React.FC<MindMapLegendProps> = ({
 }) => {
 	const { t } = useTranslation()
 	const [isOpen, setIsOpen] = useState(true)
+	const trlColorMode = useTreeUIStore((s) => s.trlColorMode)
 
 	const getLegendLabels = () => {
 		if (treeMode === "FAST") {
@@ -83,70 +97,83 @@ const MindMapLegendComponent: React.FC<MindMapLegendProps> = ({
 						</CollapsibleTrigger>
 
 						<CollapsibleContent>
-							<div className="px-3 pb-3 pt-0 space-y-2 min-w-[200px]">
-								<TooltipProvider>
-									{legendItems.map(({ level, label }) => {
-										const { bg, border } = getLegendColor(level)
-										const levelIsExpanded = isLevelExpanded
-											? isLevelExpanded(level)
-											: false
-										const showToggleButton =
-											onLevelExpand &&
-											onLevelCollapse &&
-											isLevelExpanded &&
-											level > 1
-										const showAddButton =
-											treeMode === "FAST" && level === 1 && onAddNode
-
-										return (
+							{trlColorMode ? (
+								<div className="px-3 pb-3 pt-0 space-y-1.5 min-w-[160px]">
+									{TRL_LEGEND.map(({ trl, label, bg }) => (
+										<div key={trl} className="flex items-center gap-2 text-sm">
 											<div
-												key={level}
-												className="flex items-center gap-2 text-sm"
-											>
-												<div
-													className={`w-3 h-3 rounded-full ${bg} ${border} flex-shrink-0`}
-													style={{ borderWidth: "0.6px" }}
-												/>
-												<span className="font-normal text-sm text-gray-500 flex-1">
-													{t("mindmap.legend.level_label", { level })}: {label}
-												</span>
-												{showAddButton && (
-													<Tooltip>
-														<TooltipTrigger asChild>
-															<button
-																onClick={onAddNode}
-																className="p-1 bg-[#EBF3FF] hover:bg-[#D6E6FF] rounded-sm transition-colors flex-shrink-0"
-															>
-																<Plus className="h-3 w-3 text-[#4A7DFC]" />
-															</button>
-														</TooltipTrigger>
-														<TooltipContent side="right" className="text-xs">
-															{t("mindmap.legend.add_element")}
-														</TooltipContent>
-													</Tooltip>
-												)}
-												{showToggleButton && (
-													<button
-														onClick={() => handleLevelToggle(level)}
-														className="p-1 hover:bg-gray-100 rounded-sm transition-colors flex-shrink-0"
-														title={
-															levelIsExpanded
-																? `Collapse Level ${level}`
-																: `Expand Level ${level}`
-														}
-													>
-														{levelIsExpanded ? (
-															<Shrink className="h-3 w-3 text-gray-500" />
-														) : (
-															<Expand className="h-3 w-3 text-gray-500" />
-														)}
-													</button>
-												)}
-											</div>
-										)
-									})}
-								</TooltipProvider>
-							</div>
+												className="w-3 h-3 rounded-full flex-shrink-0"
+												style={{ background: bg }}
+											/>
+											<span className="font-normal text-sm text-gray-500 flex-1">
+												TRL {trl} · {label}
+											</span>
+										</div>
+									))}
+								</div>
+							) : (
+								<div className="px-3 pb-3 pt-0 space-y-2 min-w-[200px]">
+									<TooltipProvider>
+										{legendItems.map(({ level, label }) => {
+											const { bg, border } = getLegendColor(level)
+											const levelIsExpanded = isLevelExpanded
+												? isLevelExpanded(level)
+												: false
+											const showToggleButton =
+												onLevelExpand &&
+												onLevelCollapse &&
+												isLevelExpanded &&
+												level > 1
+											const showAddButton =
+												treeMode === "FAST" && level === 1 && onAddNode
+
+											return (
+												<div key={level} className="flex items-center gap-2 text-sm">
+													<div
+														className={`w-3 h-3 rounded-full ${bg} ${border} flex-shrink-0`}
+														style={{ borderWidth: "0.6px" }}
+													/>
+													<span className="font-normal text-sm text-gray-500 flex-1">
+														{t("mindmap.legend.level_label", { level })}: {label}
+													</span>
+													{showAddButton && (
+														<Tooltip>
+															<TooltipTrigger asChild>
+																<button
+																	onClick={onAddNode}
+																	className="p-1 bg-[#EBF3FF] hover:bg-[#D6E6FF] rounded-sm transition-colors flex-shrink-0"
+																>
+																	<Plus className="h-3 w-3 text-[#4A7DFC]" />
+																</button>
+															</TooltipTrigger>
+															<TooltipContent side="right" className="text-xs">
+																{t("mindmap.legend.add_element")}
+															</TooltipContent>
+														</Tooltip>
+													)}
+													{showToggleButton && (
+														<button
+															onClick={() => handleLevelToggle(level)}
+															className="p-1 hover:bg-gray-100 rounded-sm transition-colors flex-shrink-0"
+															title={
+																levelIsExpanded
+																	? `Collapse Level ${level}`
+																	: `Expand Level ${level}`
+															}
+														>
+															{levelIsExpanded ? (
+																<Shrink className="h-3 w-3 text-gray-500" />
+															) : (
+																<Expand className="h-3 w-3 text-gray-500" />
+															)}
+														</button>
+													)}
+												</div>
+											)
+										})}
+									</TooltipProvider>
+								</div>
+							)}
 						</CollapsibleContent>
 					</div>
 				</Collapsible>

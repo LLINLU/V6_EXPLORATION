@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRL Badge Color Variants</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+      background: #f4f4f5;
+      color: #111;
+      padding: 40px 48px;
+    }
+    h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; color: #111; }
+    .subtitle { font-size: 13px; color: #666; margin-bottom: 40px; }
+
+    /* ── Reference table ──────────────────────────────── */
+    .ref-table {
+      background: #fff;
+      border: 1px solid #e4e4e7;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 48px;
+      max-width: 620px;
+    }
+    .ref-table table { width: 100%; border-collapse: collapse; }
+    .ref-table th {
+      background: #fafafa;
+      font-size: 11px;
+      font-weight: 500;
+      color: #888;
+      text-align: left;
+      padding: 8px 16px;
+      border-bottom: 1px solid #e4e4e7;
+    }
+    .ref-table td {
+      padding: 9px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: middle;
+    }
+    .ref-table tr:last-child td { border-bottom: none; }
+    .num-dot {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 24px; height: 24px; border-radius: 50%;
+      font-size: 12px; font-weight: 700; color: #fff;
+    }
+    .stage-pill {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      padding: 2px 10px; border-radius: 99px;
+    }
+    .color-swatch {
+      display: inline-block; width: 28px; height: 14px;
+      border-radius: 4px; vertical-align: middle;
+    }
+
+    /* ── Variant sections ─────────────────────────────── */
+    .variant { margin-bottom: 44px; }
+    .variant-header {
+      display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px;
+    }
+    .variant-label {
+      font-size: 11px; font-weight: 700; color: #888;
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .variant-name { font-size: 16px; font-weight: 700; color: #111; }
+    .variant-desc { font-size: 12px; color: #888; margin-top: 2px; margin-bottom: 14px; }
+
+    .badge-row {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 6px;
+      font-size: 12px; font-weight: 600; color: #111;
+      white-space: nowrap;
+    }
+    .badge .trl-num {
+      font-size: 10px; font-weight: 700; opacity: 0.65;
+    }
+
+    .divider {
+      height: 1px; background: #e4e4e7; margin: 40px 0;
+    }
+
+    /* stage divider within a row */
+    .stage-sep {
+      width: 1px; height: 28px; background: #d4d4d8; margin: 0 4px;
+    }
+    .stage-label-inline {
+      font-size: 10px; color: #aaa; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      padding: 0 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>TRL Badge Color Review</h1>
+  <p class="subtitle">全バリアントで背景色 + 黒テキスト。お好みのパレットをお知らせください。</p>
+
+  <!-- ── Reference ───────────────────────────────────────── -->
+  <div class="ref-table">
+    <table>
+      <thead>
+        <tr>
+          <th>TRL</th>
+          <th>段階</th>
+          <th>色 (参考)</th>
+          <th>成熟度ステージ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="num-dot" style="background:#e74c3c">1</span></td>
+          <td>基礎原理の発見</td>
+          <td><span class="color-swatch" style="background:#e74c3c"></span></td>
+          <td rowspan="3"><span class="stage-pill" style="background:#fef3c7;color:#92400e">基礎研究</span></td>
+        </tr>
+        <tr>
+          <td><span class="num-dot" style="background:#e86b2c">2</span></td>
+          <td>技術コンセプトの形成</td>
+          <td><span class="color-swatch" style="background:#e86b2c"></span></td>
+        </tr>
+        <tr>
+          <td><span class="num-dot" style="background:#e8a020">3</span></td>
+          <td>概念実証</td>
+          <td><span class="color-swatch" style="background:#e8a020"></span></td>
+        </tr>
+        <tr>
+          <td><span class="num-dot" style="background:#c8b800">4</span></td>
+          <td>ラボ環境での検証</td>
+          <td><span class="color-swatch" style="background:#c8b800"></span></td>
+          <td rowspan="3"><span class="stage-pill" style="background:#dbeafe;color:#1e40af">実証段階</span></td>
+        </tr>
+        <tr>
+          <td><span class="num-dot" style="background:#6abf1e">5</span></td>
+          <td>実環境での検証</td>
+          <td><span class="color-swatch" style="background:#6abf1e"></span></td>
+        </tr>
+        <tr>
+          <td><span class="num-dot" style="background:#22c55e">6</span></td>
+          <td>パイロット実証</td>
+          <td><span class="color-swatch" style="background:#22c55e"></span></td>
+        </tr>
+        <tr>
+          <td><span class="num-dot" style="background:#16a34a">7</span></td>
+          <td>実運用環境での実証</td>
+          <td><span class="color-swatch" style="background:#16a34a"></span></td>
+          <td rowspan="3"><span class="stage-pill" style="background:#d1fae5;color:#065f46">商業化済み</span></td>
+        </tr>
+        <tr>
+          <td><span class="num-dot" style="background:#2563eb">8</span></td>
+          <td>システム完成・認定</td>
+          <td><span class="color-swatch" style="background:#2563eb"></span></td>
+        </tr>
+        <tr>
+          <td><span class="num-dot" style="background:#4338ca">9</span></td>
+          <td>商業運用の実績</td>
+          <td><span class="color-swatch" style="background:#4338ca"></span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════
+       VARIANT A — Current (3 buckets)
+  ══════════════════════════════════════════════════════ -->
+  <div class="variant">
+    <div class="variant-header">
+      <span class="variant-label">A</span>
+      <span class="variant-name">Current — 3 buckets</span>
+    </div>
+    <p class="variant-desc">現在の実装。3段階で色を分ける。TRL 1–3 blue / 4–6 amber / 7–9 emerald</p>
+    <div class="badge-row">
+      <span class="badge" style="background:#dbeafe"><span class="trl-num">TRL 1</span>基礎研究</span>
+      <span class="badge" style="background:#dbeafe"><span class="trl-num">TRL 2</span>基礎研究</span>
+      <span class="badge" style="background:#dbeafe"><span class="trl-num">TRL 3</span>基礎研究</span>
+      <div class="stage-sep"></div>
+      <span class="badge" style="background:#fef3c7"><span class="trl-num">TRL 4</span>実証段階</span>
+      <span class="badge" style="background:#fef3c7"><span class="trl-num">TRL 5</span>実証段階</span>
+      <span class="badge" style="background:#fef3c7"><span class="trl-num">TRL 6</span>実証段階</span>
+      <div class="stage-sep"></div>
+      <span class="badge" style="background:#d1fae5"><span class="trl-num">TRL 7</span>商業化済み</span>
+      <span class="badge" style="background:#d1fae5"><span class="trl-num">TRL 8</span>商業化済み</span>
+      <span class="badge" style="background:#d1fae5"><span class="trl-num">TRL 9</span>商業化済み</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ══════════════════════════════════════════════════════
+       VARIANT B — Rainbow pastel (individual per TRL)
+  ══════════════════════════════════════════════════════ -->
+  <div class="variant">
+    <div class="variant-header">
+      <span class="variant-label">B</span>
+      <span class="variant-name">Rainbow pastel — individual per TRL</span>
+    </div>
+    <p class="variant-desc">参考画像のスペクトルに忠実。各TRLに固有の色。赤→オレンジ→黄→緑→青</p>
+    <div class="badge-row">
+      <span class="badge" style="background:#fecaca"><span class="trl-num">TRL 1</span>基礎原理</span>
+      <span class="badge" style="background:#fed7aa"><span class="trl-num">TRL 2</span>コンセプト</span>
+      <span class="badge" style="background:#fef08a"><span class="trl-num">TRL 3</span>概念実証</span>
+      <div class="stage-sep"></div>
+      <span class="badge" style="background:#d9f99d"><span class="trl-num">TRL 4</span>ラボ検証</span>
+      <span class="badge" style="background:#bbf7d0"><span class="trl-num">TRL 5</span>実環境</span>
+      <span class="badge" style="background:#99f6e4"><span class="trl-num">TRL 6</span>パイロット</span>
+      <div class="stage-sep"></div>
+      <span class="badge" style="background:#a5f3fc"><span class="trl-num">TRL 7</span>実運用</span>
+      <span class="badge" style="background:#bae6fd"><span class="trl-num">TRL 8</span>完成</span>
+      <span class="badge" style="background:#bfdbfe"><span class="trl-num">TRL 9</span>商業運用</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ══════════════════════════════════════════════════════
+       VARIANT C — Muted / desaturated rainbow
+  ══════════════════════════════════════════════════════ -->
+  <div class="variant">
+    <div class="variant-header">
+      <span class="variant-label">C</span>
+      <span class="variant-name">Muted rainbow — low saturation</span>
+    </div>
+    <p class="variant-desc">Bと同じ色相だが彩度を下げてより落ち着いた印象。UI上のノイズが減る。</p>
+    <div class="badge-row">
+      <span class="badge" style="background:#f5e0e0"><span class="trl-num">TRL 1</span>基礎原理</span>
+      <span class="badge" style="background:#f5ebdf"><span class="trl-num">TRL 2</span>コンセプト</span>
+      <span class="badge" style="background:#f5f2dc"><span class="trl-num">TRL 3</span>概念実証</span>
+      <div class="stage-sep"></div>
+      <span class="badge" style="background:#e8f3dc"><span class="trl-num">TRL 4</span>ラボ検証</span>
+      <span class="badge" style="background:#ddf3e5"><span class="trl-num">TRL 5</span>実環境</span>
+      <span class="badge" style="background:#daf3ef"><span class="trl-num">TRL 6</span>パイロット</span>
+      <div class="stage-sep"></div>
+      <span class="badge" style="background:#daf0f5"><span class="trl-num">TRL 7</span>実運用</span>
+      <span class="badge" style="background:#dde8f5"><span class="trl-num">TRL 8</span>完成</span>
+      <span class="badge" style="background:#e0e6f5"><span class="trl-num">TRL 9</span>商業運用</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ══════════════════════════════════════════════════════
+       VARIANT D — Warm → Cool (3 buckets, alt hues)
+  ══════════════════════════════════════════════════════ -->
+  <div class="variant">
+    <div class="variant-header">
+      <span class="variant-label">D</span>
+      <span class="variant-name">Warm → Neutral → Cool — 3 buckets alt</span>
+    </div>
+    <p class="variant-desc">Aの3バケツを保ちつつ、色相を変更。ローズ / セージ / スレート</p>
+    <div class="badge-row">
+      <span class="badge" style="background:#fce7e7"><span class="trl-num">TRL 1</span>基礎研究</span>
+      <span class="badge" style="background:#fce7e7"><span class="trl-num">TRL 2</span>基礎研究</span>
+      <span class="badge" style="background:#fce7e7"><span class="trl-num">TRL 3</span>基礎研究</span>
+      <div class="stage-sep"></div>
+      <span class="badge" style="background:#e6f4ee"><span class="trl-num">TRL 4</span>実証段階</span>
+      <span class="badge" style="background:#e6f4ee"><span class="trl-num">TRL 5</span>実証段階</span>
+      <span class="badge" style="background:#e6f4ee"><span class="trl-num">TRL 6</span>実証段階</span>
+      <div class="stage-sep"></div>
+      <span class="badge" style="background:#e2eaf7"><span class="trl-num">TRL 7</span>商業化済み</span>
+      <span class="badge" style="background:#e2eaf7"><span class="trl-num">TRL 8</span>商業化済み</span>
+      <span class="badge" style="background:#e2eaf7"><span class="trl-num">TRL 9</span>商業化済み</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ══════════════════════════════════════════════════════
+       VARIANT E — Amber gradient (3 buckets, monochromatic)
+  ══════════════════════════════════════════════════════ -->
+  <div class="variant">
+    <div class="variant-header">
+      <span class="variant-label">E</span>
+      <span class="variant-name">Amber gradient — monochromatic 3 buckets</span>
+    </div>
+    <p class="variant-desc">単一の色相でライトからダークへ段階表現。成熟度の「深まり」を暗示。</p>
+    <div class="badge-row">
+      <span class="badge" style="background:#fef3c7"><span class="trl-num">TRL 1</span>基礎研究</span>
+      <span class="badge" style="background:#fef3c7"><span class="trl-num">TRL 2</span>基礎研究</span>
+      <span class="badge" style="background:#fef3c7"><span class="trl-num">TRL 3</span>基礎研究</span>
+      <div class="stage-sep"></div>
+      <span class="badge" style="background:#fde68a"><span class="trl-num">TRL 4</span>実証段階</span>
+      <span class="badge" style="background:#fde68a"><span class="trl-num">TRL 5</span>実証段階</span>
+      <span class="badge" style="background:#fde68a"><span class="trl-num">TRL 6</span>実証段階</span>
+      <div class="stage-sep"></div>
+      <span class="badge" style="background:#fcd34d"><span class="trl-num">TRL 7</span>商業化済み</span>
+      <span class="badge" style="background:#fcd34d"><span class="trl-num">TRL 8</span>商業化済み</span>
+      <span class="badge" style="background:#fcd34d"><span class="trl-num">TRL 9</span>商業化済み</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ══════════════════════════════════════════════════════
+       VARIANT F — Indigo tint (monochromatic, cool)
+  ══════════════════════════════════════════════════════ -->
+  <div class="variant">
+    <div class="variant-header">
+      <span class="variant-label">F</span>
+      <span class="variant-name">Indigo tint — monochromatic cool</span>
+    </div>
+    <p class="variant-desc">単一インディゴ。最も薄い（未熟）→やや濃い（成熟）。シンプルで落ち着く。</p>
+    <div class="badge-row">
+      <span class="badge" style="background:#ede9fe"><span class="trl-num">TRL 1</span>基礎研究</span>
+      <span class="badge" style="background:#ede9fe"><span class="trl-num">TRL 2</span>基礎研究</span>
+      <span class="badge" style="background:#ede9fe"><span class="trl-num">TRL 3</span>基礎研究</span>
+      <div class="stage-sep"></div>
+      <span class="badge" style="background:#ddd6fe"><span class="trl-num">TRL 4</span>実証段階</span>
+      <span class="badge" style="background:#ddd6fe"><span class="trl-num">TRL 5</span>実証段階</span>
+      <span class="badge" style="background:#ddd6fe"><span class="trl-num">TRL 6</span>実証段階</span>
+      <div class="stage-sep"></div>
+      <span class="badge" style="background:#c4b5fd"><span class="trl-num">TRL 7</span>商業化済み</span>
+      <span class="badge" style="background:#c4b5fd"><span class="trl-num">TRL 8</span>商業化済み</span>
+      <span class="badge" style="background:#c4b5fd"><span class="trl-num">TRL 9</span>商業化済み</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ══════════════════════════════════════════════════════
+       VARIANT G — Full rainbow individual (bolder)
+  ══════════════════════════════════════════════════════ -->
+  <div class="variant">
+    <div class="variant-header">
+      <span class="variant-label">G</span>
+      <span class="variant-name">Rainbow — individual, slightly bolder</span>
+    </div>
+    <p class="variant-desc">Bより少し濃い。視認性重視。ノードが小さくても色が読み取れる。</p>
+    <div class="badge-row">
+      <span class="badge" style="background:#fca5a5"><span class="trl-num">TRL 1</span>基礎原理</span>
+      <span class="badge" style="background:#fdba74"><span class="trl-num">TRL 2</span>コンセプト</span>
+      <span class="badge" style="background:#fde047"><span class="trl-num">TRL 3</span>概念実証</span>
+      <div class="stage-sep"></div>
+      <span class="badge" style="background:#bef264"><span class="trl-num">TRL 4</span>ラボ検証</span>
+      <span class="badge" style="background:#86efac"><span class="trl-num">TRL 5</span>実環境</span>
+      <span class="badge" style="background:#5eead4"><span class="trl-num">TRL 6</span>パイロット</span>
+      <div class="stage-sep"></div>
+      <span class="badge" style="background:#67e8f9"><span class="trl-num">TRL 7</span>実運用</span>
+      <span class="badge" style="background:#7dd3fc"><span class="trl-num">TRL 8</span>完成</span>
+      <span class="badge" style="background:#93c5fd"><span class="trl-num">TRL 9</span>商業運用</span>
+    </div>
+  </div>
+
+</body>
+</html>
