@@ -70,6 +70,7 @@ interface TreeUIActions {
 
 	// TRL color mode
 	toggleTrlColorMode: () => void
+	setTrlColorMode: (on: boolean) => void
 
 	// Initialization action (from useTreeEffects)
 	initializeUI: () => void
@@ -159,6 +160,7 @@ export const useTreeUIStore = create<TreeUIState & TreeUIActions>(
 
 		toggleTrlColorMode: () =>
 			set((state) => ({ trlColorMode: !state.trlColorMode })),
+		setTrlColorMode: (on: boolean) => set({ trlColorMode: on }),
 
 		// Initialization action (from useTreeEffects)
 		initializeUI: () => {

@@ -114,12 +114,13 @@ export default function V1TreeMap() {
 	const panZoom = useRef({ zoom: 1, panX: 0, panY: 0 })
 
 	const { setLevelItems, setLevelNames, setTreeMode } = useTreeDataStore()
-	const { collapsedSidebar, toggleSidebar, setSidebarTab } = useTreeUIStore()
+	const { collapsedSidebar, toggleSidebar, setSidebarTab, setTrlColorMode } = useTreeUIStore()
 
 	// Populate store with dummy data once
 	useEffect(() => {
 		setTreeMode("FAST")
 		setSidebarTab("result")
+		setTrlColorMode(true)
 		setLevelNames(LEVEL_NAMES)
 		setLevelItems(1, L1)
 		setLevelItems(2, L2)
@@ -131,7 +132,7 @@ export default function V1TreeMap() {
 		setLevelItems(8, EMPTY)
 		setLevelItems(9, EMPTY)
 		setLevelItems(10, EMPTY)
-	}, [setLevelItems, setLevelNames, setTreeMode])
+	}, [setLevelItems, setLevelNames, setTreeMode, setSidebarTab, setTrlColorMode])
 
 	const researchPanelContent = (
 		<TechTreeResearchPanelComponent
