@@ -1,15 +1,15 @@
 import { Minus, Trash2 } from "lucide-react"
 
 const TRL_META: Record<number, { label: string; bg: string }> = {
-	1: { label: "基礎研究",   bg: "#fecaca" },
-	2: { label: "基礎研究",   bg: "#fed7aa" },
-	3: { label: "基礎研究",   bg: "#fef08a" },
-	4: { label: "実証段階",   bg: "#d9f99d" },
-	5: { label: "実証段階",   bg: "#bbf7d0" },
-	6: { label: "実証段階",   bg: "#99f6e4" },
-	7: { label: "商業化済み", bg: "#a5f3fc" },
-	8: { label: "商業化済み", bg: "#bae6fd" },
-	9: { label: "商業化済み", bg: "#bfdbfe" },
+	1: { label: "基礎研究",   bg: "#feeeee" },
+	2: { label: "基礎研究",   bg: "#feeeee" },
+	3: { label: "基礎研究",   bg: "#feeeee" },
+	4: { label: "実証段階",   bg: "#feffec" },
+	5: { label: "実証段階",   bg: "#feffec" },
+	6: { label: "実証段階",   bg: "#feffec" },
+	7: { label: "商業化済み", bg: "#f1f7ff" },
+	8: { label: "商業化済み", bg: "#f1f7ff" },
+	9: { label: "商業化済み", bg: "#f1f7ff" },
 }
 function getTrlMeta(trl: number) {
 	return TRL_META[trl] ?? TRL_META[3]
@@ -294,7 +294,7 @@ export const MindMapNodeComponent: React.FC<MindMapNodeProps> = ({
 			>
 				<div
 					className={`w-full h-full rounded-lg border flex flex-col justify-center relative ${nodeStyles.colorClasses} p-2`}
-					style={trlBg ? { background: trlBg } : undefined}
+					style={trlBg ? { background: trlBg, borderColor: "#e5e7eb", color: "#374151" } : undefined}
 				>
 					{/* Node Title */}
 					<div

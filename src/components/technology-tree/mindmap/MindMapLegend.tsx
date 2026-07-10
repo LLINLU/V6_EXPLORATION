@@ -16,15 +16,9 @@ import {
 import { useTreeUIStore } from "@/stores/treeUIStore"
 
 const TRL_LEGEND = [
-	{ trl: 1, label: "基礎研究",   bg: "#fecaca" },
-	{ trl: 2, label: "基礎研究",   bg: "#fed7aa" },
-	{ trl: 3, label: "基礎研究",   bg: "#fef08a" },
-	{ trl: 4, label: "実証段階",   bg: "#d9f99d" },
-	{ trl: 5, label: "実証段階",   bg: "#bbf7d0" },
-	{ trl: 6, label: "実証段階",   bg: "#99f6e4" },
-	{ trl: 7, label: "商業化済み", bg: "#a5f3fc" },
-	{ trl: 8, label: "商業化済み", bg: "#bae6fd" },
-	{ trl: 9, label: "商業化済み", bg: "#bfdbfe" },
+	{ trl: "1–3", label: "基礎研究",   bg: "#feeeee" },
+	{ trl: "4–6", label: "実証段階",   bg: "#feffec" },
+	{ trl: "7–9", label: "商業化済み", bg: "#f1f7ff" },
 ]
 
 interface MindMapLegendProps {
@@ -103,7 +97,7 @@ const MindMapLegendComponent: React.FC<MindMapLegendProps> = ({
 										<div key={trl} className="flex items-center gap-2 text-sm">
 											<div
 												className="w-3 h-3 rounded-full flex-shrink-0"
-												style={{ background: bg }}
+												style={{ background: bg, border: "0.5px solid rgba(0,0,0,0.12)" }}
 											/>
 											<span className="font-normal text-sm text-gray-500 flex-1">
 												TRL {trl} · {label}
