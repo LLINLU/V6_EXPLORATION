@@ -93,6 +93,45 @@ const MindMapLegendComponent: React.FC<MindMapLegendProps> = ({
 						<CollapsibleContent>
 							{trlColorMode ? (
 								<div className="px-3 pb-3 pt-0 space-y-1.5 min-w-[160px]">
+									{/* Expand/collapse buttons — no dots, no level labels */}
+									<TooltipProvider>
+										{legendItems.map(({ level, label }) => {
+											const levelIsExpanded = isLevelExpanded ? isLevelExpanded(level) : false
+											const showToggleButton = onLevelExpand && onLevelCollapse && isLevelExpanded && level > 1
+											const showAddButton = treeMode === "FAST" && level === 1 && onAddNode
+											if (!showToggleButton && !showAddButton) return null
+											return (
+												<div key={level} className="flex items-center gap-1.5 text-sm">
+													<span className="font-normal text-sm text-gray-500 flex-1">
+														{t("mindmap.legend.level_label", { level })}: {label}
+													</span>
+													{showAddButton && (
+														<Tooltip>
+															<TooltipTrigger asChild>
+																<button onClick={onAddNode}
+																	className="p-1 bg-[#EBF3FF] hover:bg-[#D6E6FF] rounded-sm transition-colors flex-shrink-0">
+																	<Plus className="h-3 w-3 text-[#4A7DFC]" />
+																</button>
+															</TooltipTrigger>
+															<TooltipContent side="right" className="text-xs">{t("mindmap.legend.add_element")}</TooltipContent>
+														</Tooltip>
+													)}
+													{showToggleButton && (
+														<button onClick={() => handleLevelToggle(level)}
+															className="p-1 hover:bg-gray-100 rounded-sm transition-colors flex-shrink-0"
+															title={levelIsExpanded ? `Collapse Level ${level}` : `Expand Level ${level}`}>
+															{levelIsExpanded ? <Shrink className="h-3 w-3 text-gray-500" /> : <Expand className="h-3 w-3 text-gray-500" />}
+														</button>
+													)}
+												</div>
+											)
+										})}
+									</TooltipProvider>
+
+									{/* Divider */}
+									<div className="border-t border-gray-100 my-1" />
+
+									{/* TRL color legend */}
 									{TRL_LEGEND.map(({ trl, label, bg }) => (
 										<div key={trl} className="flex items-center gap-2 text-sm">
 											<div

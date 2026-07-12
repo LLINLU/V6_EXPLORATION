@@ -268,7 +268,7 @@ export function ScenarioOverview({ scenarios }: { scenarios: Scenario[] }) {
           {groups.map((g) => {
             const isOpen = expanded.has(g.name)
             return (
-              <div key={g.name} className="border-[0.5px] border-gray-200 rounded-lg bg-white">
+              <div key={g.name} className={`border-[0.5px] rounded-lg bg-white ${g.items.some((s) => s.id === selectedScenario?.id) ? "border-[1.5px] border-blue-400" : "border-[0.5px] border-gray-200"}`}>
                 {/* Card head */}
                 <div className="flex items-center gap-2 px-3 pt-3 pb-2">
                   <div className="text-sm font-semibold text-gray-900">{g.name}</div>
