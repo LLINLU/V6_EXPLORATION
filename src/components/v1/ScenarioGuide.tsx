@@ -1,3 +1,4 @@
+import type React from "react"
 import { useState } from "react"
 import type { Scenario } from "@/types/scenario"
 
@@ -28,15 +29,18 @@ interface TimingInfo {
   key: TimingKey
   bg: string
   text: string
+  badgeStyle: React.CSSProperties
 }
+
+const BADGE_COLOR = "#1f2937"
 
 function getTimingInfo(paperCagr: number, patentCagr: number): TimingInfo {
   const ph = paperCagr >= 4.6
   const pth = patentCagr >= 5
-  if (ph && pth) return { label: "成長期", key: "grow", bg: "bg-emerald-100", text: "text-emerald-700" }
-  if (ph && !pth) return { label: "黎明期", key: "dawn", bg: "bg-purple-100", text: "text-purple-700" }
-  if (!ph && pth) return { label: "成熟期", key: "mature", bg: "bg-amber-100", text: "text-amber-700" }
-  return { label: "衰退期", key: "decline", bg: "bg-red-100", text: "text-red-700" }
+  if (ph && pth) return { label: "成長期", key: "grow", bg: "bg-emerald-100", text: "text-emerald-700", badgeStyle: { backgroundColor: "#f3fdf8", color: BADGE_COLOR } }
+  if (ph && !pth) return { label: "黎明期", key: "dawn", bg: "bg-purple-100", text: "text-purple-700", badgeStyle: { backgroundColor: "#f5f3ff", color: BADGE_COLOR } }
+  if (!ph && pth) return { label: "成熟期", key: "mature", bg: "bg-amber-100", text: "text-amber-700", badgeStyle: { backgroundColor: "#fffbeb", color: BADGE_COLOR } }
+  return { label: "衰退期", key: "decline", bg: "bg-red-100", text: "text-red-700", badgeStyle: { backgroundColor: "#fff1f2", color: BADGE_COLOR } }
 }
 
 function fmtTam(v: number) {
@@ -119,7 +123,7 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
               onClick={() => setSelectedMarkets(toggleSet(selectedMarkets, ind))}
               className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors ${
                 on
-                  ? "border-blue-500 bg-blue-50 text-blue-700 font-semibold"
+                  ? "border-blue-500 bg-blue-50 text-blue-700 font-normal"
                   : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
               }`}
             >
@@ -165,7 +169,7 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
               onClick={() => setAttractSort(s)}
               className={`px-2.5 py-1 rounded-md border text-xs transition-colors ${
                 attractSort === s
-                  ? "border-blue-500 bg-blue-50 text-blue-700 font-semibold"
+                  ? "border-blue-500 bg-blue-50 text-blue-700 font-normal"
                   : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
               }`}
             >
@@ -238,12 +242,12 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
         </div>
         <div className="flex flex-wrap gap-1.5 mb-3">
           {[
-            { label: "成長期", sub: "論文↑・特許↑ 参入好機", bg: "bg-emerald-50", text: "text-emerald-700" },
-            { label: "黎明期", sub: "論文↑・特許→ 先行仕込み", bg: "bg-purple-50", text: "text-purple-700" },
-            { label: "成熟期", sub: "論文→・特許↑ 後発注意", bg: "bg-amber-50", text: "text-amber-700" },
-            { label: "衰退期", sub: "論文↓・特許↓ 見極め", bg: "bg-red-50", text: "text-red-700" },
+            { label: "成長期", sub: "論文↑・特許↑ 参入好機", bg: "", style: { backgroundColor: "#f3fdf8" } },
+            { label: "黎明期", sub: "論文↑・特許→ 先行仕込み", bg: "bg-purple-50", style: {} },
+            { label: "成熟期", sub: "論文→・特許↑ 後発注意", bg: "bg-amber-50", style: {} },
+            { label: "衰退期", sub: "論文↓・特許↓ 見極め", bg: "bg-red-50", style: {} },
           ].map((t) => (
-            <span key={t.label} className={`${t.bg} ${t.text} rounded-full px-2.5 py-1 text-[11px] font-medium whitespace-nowrap`}>
+            <span key={t.label} className={`${t.bg} rounded-full px-2.5 py-1 text-[11px] font-medium whitespace-nowrap`} style={{ color: "#1f2937", ...t.style }}>
               {t.label}
               <span className="font-normal opacity-70 ml-1">{t.sub}</span>
             </span>
@@ -266,14 +270,11 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
                 <div>
                   <div className="text-xs font-semibold text-gray-800 leading-snug mb-1.5">{s.name}</div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${timing.bg} ${timing.text}`}>
-                      {timing.label}
-                    </span>
                     <span className="text-[10px] text-gray-500">論文CAGR {s.metrics?.papers?.cagr ?? 0}%</span>
                     <span className="text-[10px] text-gray-500">特許CAGR {s.metrics?.patents?.cagr ?? 0}%</span>
                   </div>
                 </div>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium flex-shrink-0 self-start ${timing.bg} ${timing.text}`}>
+                <span className="text-[10px] px-1.5 py-0.5 rounded font-medium flex-shrink-0 self-start" style={timing.badgeStyle}>
                   {timing.label}
                 </span>
               </div>
@@ -314,7 +315,7 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
               <div className="text-xs font-semibold text-gray-900 mb-2 leading-snug">{s.name}</div>
               <div className="flex items-center gap-2 flex-wrap mb-2">
                 <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{IND[s.id]}</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${timing.bg} ${timing.text}`}>
+                <span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={timing.badgeStyle}>
                   {timing.label}
                 </span>
                 <span className="text-[10px] text-gray-500">TAM {fmtTam(s.metrics?.tam ?? 0)}</span>

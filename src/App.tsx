@@ -23,7 +23,6 @@ import ScenarioSelection from "./routes/ScenarioSelection"
 import SearchResults from "./routes/SearchResults"
 import TechnologyTree from "./routes/TechnologyTree"
 import V1Chat from "./routes/V1Chat"
-import V1EntryPage from "./routes/V1EntryPage"
 import V1Prioritization from "./routes/V1Prioritization"
 import V1ProblemFlow from "./routes/V1ProblemFlow"
 import V1TreeMap from "./routes/V1TreeMap"
@@ -141,7 +140,6 @@ const App = () => {
 									}
 								/>
 								{/* V1 Flow exploration routes */}
-								<Route path="/v1" element={<V1EntryPage />} />
 								<Route
 									path="/v1/prioritization"
 									element={<V1Prioritization />}

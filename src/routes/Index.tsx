@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react"
 import { AppSidebar } from "@/components/AppSidebar"
 import { RecentGeneratedTrees } from "@/components/RecentGeneratedTrees"
+import { RecentProblemSessions } from "@/components/RecentProblemSessions"
 import { TreeGenerationSection } from "@/components/tree-generation/TreeGenerationSection"
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 
 const IndexContent = () => {
+	const [homepageMode, setHomepageMode] = useState<"tech" | "problem">("tech")
+
 	return (
 		<SidebarProvider>
 			<div className="h-screen flex w-full justify-center p-1 overflow-hidden">
@@ -15,8 +18,12 @@ const IndexContent = () => {
 							<SidebarTrigger className="absolute left-4 top-4 md:hidden" />
 							<div className="max-w-5xl mx-auto space-y-8">
 								<div className="space-y-6">
-									<TreeGenerationSection />
-									<RecentGeneratedTrees />
+									<TreeGenerationSection onModeChange={setHomepageMode} />
+									{homepageMode === "problem" ? (
+										<RecentProblemSessions />
+									) : (
+										<RecentGeneratedTrees />
+									)}
 								</div>
 							</div>
 						</div>
