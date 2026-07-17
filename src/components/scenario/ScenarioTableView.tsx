@@ -810,17 +810,12 @@ function renderRow({
 				if (rawValue == null)
 					return <span className="text-sm text-gray-400">—</span>
 				const trlNum = Number(rawValue)
-				const barColor =
-					trlNum >= 7
-						? "bg-emerald-400"
-						: trlNum >= 4
-							? "bg-blue-400"
-							: "bg-amber-400"
+				const TRL_SEGMENT_COLORS = ["#fecaca","#fed7aa","#fef08a","#d9f99d","#bbf7d0","#99f6e4","#a5f3fc","#bae6fd","#bfdbfe"]
 				const textColor =
 					trlNum >= 7
-						? "text-emerald-500"
+						? "text-sky-500"
 						: trlNum >= 4
-							? "text-blue-500"
+							? "text-emerald-500"
 							: "text-amber-500"
 				const tooltipBg =
 					trlNum >= 7
@@ -830,21 +825,22 @@ function renderRow({
 							: "bg-amber-50 border-amber-200"
 				const trlDef = THEME_TRL_DEFS.find((d) => d.level === trlNum)
 				const chart = (
-					<div className="flex flex-col gap-1">
-						<span className={`text-sm font-bold ${textColor}`}>{trlNum}</span>
-						<div className="flex items-end gap-0.5 h-6 w-full">
-							{Array.from({ length: 9 }, (_, i) => {
-								const level = i + 1
-								const filled = level <= trlNum
-								return (
-									<div
-										key={i}
-										className={`w-1.5 shrink-0 rounded-sm ${filled ? barColor : "bg-gray-200"}`}
-										style={{ height: filled ? "100%" : "30%" }}
-									/>
-								)
-							})}
-						</div>
+					<div className="flex items-center gap-1">
+						{Array.from({ length: 9 }, (_, i) => {
+							const filled = i < trlNum
+							return (
+								<div
+									key={i}
+									className="rounded-full shrink-0"
+									style={{
+										width: filled ? 10 : 7,
+										height: filled ? 10 : 7,
+										background: filled ? TRL_SEGMENT_COLORS[i] : "#e5e7eb",
+									}}
+								/>
+							)
+						})}
+						<span className="text-sm text-gray-400 ml-1 tabular-nums">{trlNum}</span>
 					</div>
 				)
 				const trlButton = (
@@ -852,7 +848,7 @@ function renderRow({
 						type="button"
 						onClick={(e) => {
 							e.stopPropagation()
-							onOpenTrlModal(scenario)
+							onRowClickWithTab?.(scenario, "trl")
 						}}
 						className="cursor-pointer text-left"
 					>
@@ -3065,7 +3061,7 @@ export const ScenarioTableView = ({
 				</DialogContent>
 			</Dialog>
 
-			<div className="bg-white border border-gray-200 rounded-lg overflow-hidden h-full flex flex-col">
+			<div className="bg-white rounded-lg overflow-hidden h-full flex flex-col">
 				<div className="p-4 border-b bg-white space-y-3 flex-shrink-0">
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-3">

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Homepage Flow Proposal</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic UI', sans-serif; background: #f3f4f6; color: #1a1a2e; padding: 40px 32px; }
+
+  h1 { font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #9ca3af; margin-bottom: 32px; }
+
+  .section { margin-bottom: 48px; }
+  .section-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #9ca3af; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .section-label .badge { background: #f3f4f6; border: 1px solid #e5e7eb; color: #6b7280; padding: 2px 8px; border-radius: 4px; font-size: 10px; }
+  .section-label .badge.rec { background: #eff6ff; border-color: #bfdbfe; color: #2563eb; }
+
+  /* The input card shell */
+  .card { background: #fbfbfb; border: 1px solid #ebf0f7; border-radius: 16px; padding: 20px; max-width: 720px; }
+  .input-row { display: flex; align-items: center; gap: 8px; padding: 4px 0 16px; }
+  .input-mock { flex: 1; font-size: 15px; color: #9ca3af; }
+  .arrow { width: 32px; height: 32px; border-radius: 50%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .arrow svg { color: #6b7280; }
+
+  .tabs-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  /* Pills */
+  .pill { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 14px; border-radius: 99px; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: all .15s; }
+  .pill-icon { font-size: 11px; }
+
+  .pill-blue   { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+  .pill-violet { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+  .pill-gray   { background: #eeeff0; color: #9f9f9f; border: 1px solid transparent; }
+  .pill-amber  { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+  .pill-green  { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+  .sep { color: #d1d5db; font-size: 13px; select: none; }
+
+  /* Checkbox-style toggle pill */
+  .toggle-pill { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 99px; font-size: 12px; cursor: pointer; }
+  .toggle-pill.off { background: #eeeff0; color: #9f9f9f; border: 1px solid transparent; }
+  .toggle-pill.on  { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+  .chk { width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid #9ca3af; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .chk.checked { background: #2563eb; border-color: #2563eb; }
+  .chk.checked svg { display: block; }
+  .chk svg { display: none; width: 8px; height: 8px; }
+
+  /* Annotation */
+  .note { font-size: 11px; color: #9ca3af; margin-top: 10px; padding-left: 4px; line-height: 1.6; }
+  .note b { color: #4b5563; }
+  .note .pro { color: #16a34a; }
+  .note .con { color: #dc2626; }
+
+  /* Flow arrow diagram */
+  .flow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+  .fbox { font-size: 11px; padding: 4px 10px; border-radius: 6px; border: 1px solid #e5e7eb; background: #fff; color: #374151; }
+  .fbox.start { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; font-weight: 600; }
+  .fbox.end   { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; font-weight: 600; }
+  .fbox.opt   { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+  .farrow { color: #d1d5db; font-size: 13px; }
+
+  hr { border: none; border-top: 1px solid #e5e7eb; margin: 40px 0; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 880px; }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+  .label-current { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #9ca3af; margin-bottom: 8px; }
+  .label-proposed { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #2563eb; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<h1>Homepage — Flow Structure Proposal</h1>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- CONTEXT -->
+<!-- ══════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-label">現在の構造（課題）</div>
+  <div class="card">
+    <div class="input-row">
+      <div class="input-mock">クエリを入力すると、関連するシナリオと技術コンポーネントが生成されます。</div>
+      <div class="arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 5 12 12 5 19 12"/></svg></div>
+    </div>
+    <div class="tabs-row">
+      <span class="pill pill-blue"><span class="pill-icon">♀</span>技術起点</span>
+      <span class="pill pill-gray"><span class="pill-icon">⊠</span>問題起点</span>
+      <span class="sep">|</span>
+      <span class="toggle-pill off">
+        <span class="chk"><svg viewBox="0 0 8 6" fill="white"><path d="M1 3l2 2 4-4" stroke="white" stroke-width="1.5" fill="none"/></svg></span>
+        技術の全体像を把握する
+      </span>
+    </div>
+  </div>
+  <p class="note">⚠ <b>FAST（技術ツリー直接生成）が消えている。</b> ユーザーが「まずツリーを見てから考えたい」というクイック探索ニーズに応えられない。</p>
+</div>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- OPTION A -->
+<!-- ══════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-label">Option A — ３つ目タブとして追加 <span class="badge">シンプル</span></div>
+  <div class="card">
+    <div class="input-row">
+      <div class="input-mock">クエリを入力すると、関連するシナリオと技術コンポーネントが生成されます。</div>
+      <div class="arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 5 12 12 5 19 12"/></svg></div>
+    </div>
+    <div class="tabs-row">
+      <span class="pill pill-blue"><span class="pill-icon">♀</span>技術起点</span>
+      <span class="pill pill-violet"><span class="pill-icon">⊠</span>問題起点</span>
+      <span class="pill pill-amber"><span class="pill-icon">⚡</span>クイック探索</span>
+    </div>
+  </div>
+  <div class="flow">
+    <span class="fbox start">技術起点</span><span class="farrow">→</span><span class="fbox">技術特性 Dialog</span><span class="farrow">→</span><span class="fbox end">有望シナリオ選定</span>
+  </div>
+  <div class="flow">
+    <span class="fbox start">問題起点</span><span class="farrow">→</span><span class="fbox end">BN分解 → 解決シナリオ</span>
+  </div>
+  <div class="flow">
+    <span class="fbox" style="background:#fffbeb;border-color:#fde68a;color:#92400e;font-weight:600">⚡ クイック探索</span><span class="farrow">→</span><span class="fbox end">技術ツリー（マインドマップ）</span>
+  </div>
+  <p class="note">
+    <span class="pro">✓ 発見しやすい。3つのモードが並列で明快。</span><br>
+    <span class="con">✗ 元の3タブに戻る。「クイック探索」が他2つと同格に見えてしまい重みが違う。</span>
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- OPTION B — RECOMMENDED -->
+<!-- ══════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-label">Option B — 技術起点のサブオプションとして追加 <span class="badge rec">推奨</span></div>
+  <div class="card">
+    <div class="input-row">
+      <div class="input-mock">クエリを入力すると、関連するシナリオと技術コンポーネントが生成されます。</div>
+      <div class="arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 5 12 12 5 19 12"/></svg></div>
+    </div>
+    <div class="tabs-row">
+      <span class="pill pill-blue"><span class="pill-icon">♀</span>技術起点</span>
+      <span class="pill pill-gray"><span class="pill-icon">⊠</span>問題起点</span>
+      <span class="sep">|</span>
+      <!-- two toggles under tech -->
+      <span class="toggle-pill off">
+        <span class="chk"><svg viewBox="0 0 8 6" fill="white"><path d="M1 3l2 2 4-4" stroke="white" stroke-width="1.5" fill="none"/></svg></span>
+        技術の全体像を把握する
+      </span>
+      <span class="toggle-pill off">
+        <span class="chk"><svg viewBox="0 0 8 6" fill="white"><path d="M1 3l2 2 4-4" stroke="white" stroke-width="1.5" fill="none"/></svg></span>
+        技術ツリーを先に確認する
+      </span>
+    </div>
+  </div>
+  <div class="flow">
+    <span class="fbox start">技術起点（デフォルト）</span><span class="farrow">→</span><span class="fbox">技術特性 Dialog</span><span class="farrow">→</span><span class="fbox end">有望シナリオ選定</span>
+  </div>
+  <div class="flow">
+    <span class="fbox start">+ 全体像を把握する</span><span class="farrow">→</span><span class="fbox opt">クエリレポート</span><span class="farrow">→</span><span class="fbox end">有望シナリオ選定</span>
+  </div>
+  <div class="flow">
+    <span class="fbox start">+ ツリーを先に確認する</span><span class="farrow">→</span><span class="fbox opt">技術ツリー（FAST）</span><span class="farrow">→</span><span class="fbox end">有望シナリオ選定</span>
+  </div>
+  <p class="note">
+    <span class="pro">✓ タブは2つのまま。クイック探索は技術起点の「準備ステップ」として自然に位置づけられる。<br>✓ どちらのオプションも「最終的には有望シナリオ選定へ収束する」という構造を守れる。<br>✓ 両オプションを同時にオンにすることも可能（ツリー → レポート → 選定）。</span><br>
+    <span class="con">✗ 2つのチェックボックスが並ぶため、初見ユーザーに少し説明が必要かも。</span>
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- OPTION C -->
+<!-- ══════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-label">Option C — サジェストチップで差別化 <span class="badge">軽量</span></div>
+  <div class="card">
+    <div class="input-row">
+      <div class="input-mock">クエリを入力すると、関連するシナリオと技術コンポーネントが生成されます。</div>
+      <div class="arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 5 12 12 5 19 12"/></svg></div>
+    </div>
+    <div class="tabs-row">
+      <span class="pill pill-blue"><span class="pill-icon">♀</span>技術起点</span>
+      <span class="pill pill-gray"><span class="pill-icon">⊠</span>問題起点</span>
+      <span class="sep">|</span>
+      <span class="toggle-pill off">
+        <span class="chk"></span>
+        技術の全体像を把握する
+      </span>
+    </div>
+  </div>
+
+  <!-- suggestions row below card -->
+  <div style="max-width:720px;margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span style="font-size:12px;color:#9ca3af;display:flex;align-items:center;gap:4px">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="#a78bfa" stroke="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+      試してみる：
+    </span>
+    <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;background:#fff;border:1px solid #e5e7eb;padding:3px 10px;border-radius:99px;color:#374151;cursor:pointer">全固体電池</span>
+    <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;background:#fff;border:1px solid #e5e7eb;padding:3px 10px;border-radius:99px;color:#374151;cursor:pointer">mRNA治療薬</span>
+    <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;background:#fffbeb;border:1px solid #fde68a;padding:3px 10px;border-radius:99px;color:#92400e;cursor:pointer">
+      <span style="font-size:10px;font-weight:700;background:#f59e0b;color:#fff;border-radius:3px;padding:1px 4px">FAST</span>
+      光電融合
+    </span>
+    <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;background:#fffbeb;border:1px solid #fde68a;padding:3px 10px;border-radius:99px;color:#92400e;cursor:pointer">
+      <span style="font-size:10px;font-weight:700;background:#f59e0b;color:#fff;border-radius:3px;padding:1px 4px">FAST</span>
+      炭素回収技術
+    </span>
+  </div>
+  <p class="note">
+    <span class="pro">✓ タブが増えない。FASTチップをクリックするとそのままツリーへ飛ぶ。UIがすっきり。</span><br>
+    <span class="con">✗ 「任意のクエリをFASTモードで検索したい」ときの導線が弱い。サジェストにしかFASTバッジが出ない。</span>
+  </p>
+</div>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- RECOMMENDATION SUMMARY -->
+<!-- ══════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-label">まとめ</div>
+  <div style="max-width:720px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;font-size:13px;line-height:2;color:#374151">
+    <p><b>推奨はOption B。</b>理由：</p>
+    <ul style="padding-left:20px;margin-top:8px;space-y:4px">
+      <li>「技術起点」は常に最終的に有望シナリオ選定へ収束する。ツリー確認もレポート確認も<b>その前の準備ステップ</b>として自然に位置づけられる。</li>
+      <li>タブが2つのまま保たれ、問題起点との対称性が崩れない。</li>
+      <li>両オプションが同時にオンでも成立する（ツリー → レポート → 選定の順）。</li>
+      <li>将来的にオプションが増えても同じパターンで拡張できる。</li>
+    </ul>
+    <div style="margin-top:16px;padding:12px 16px;background:#eff6ff;border-radius:8px;border-left:3px solid #2563eb;font-size:12px;color:#1e40af;line-height:1.7">
+      実装イメージ：「技術ツリーを先に確認する」をオンにして Submit → FAST で技術ツリーへ。
+      ツリーページに「シナリオ探索へ進む →」ボタンを置き、そこから有望シナリオ選定に合流。
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

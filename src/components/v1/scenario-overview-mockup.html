@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f3f4f6; display: flex; justify-content: center; padding: 32px; }
+  .panel { background: white; border-radius: 12px; padding: 16px; width: 640px; }
+
+  /* Axis + switcher row */
+  .header-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .axis-btn { padding: 4px 12px; border: 0.5px solid #d1d5db; border-radius: 999px; font-size: 12px; color: #4b5563; background: white; cursor: pointer; }
+  .axis-btn.active { border-color: #93c5fd; background: #eff6ff; color: #1d4ed8; }
+
+  /* Multi-select switcher */
+  .switcher { margin-left: auto; display: flex; align-items: center; background: #f3f4f6; border-radius: 8px; padding: 2px; gap: 2px; }
+  .sw-btn { padding: 4px 10px; border-radius: 6px; font-size: 11px; color: #6b7280; cursor: pointer; border: none; background: transparent; }
+  .sw-btn.active { background: white; color: #2563eb; font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+
+  /* Summary card */
+  .summary-card { background: #f9fafb; border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
+  .summary-header { display: flex; align-items: center; gap: 6px; padding: 7px 10px; cursor: pointer; }
+  .summary-header span { font-size: 12px; color: #9ca3af; flex: 1; }
+  .chevron { font-size: 10px; color: #d1d5db; }
+
+  /* Table inside summary */
+  .summary-table { padding: 0 10px 10px; }
+  .col-headers { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .col-name { width: 88px; flex-shrink: 0; }
+  .col-count { width: 28px; flex-shrink: 0; text-align: right; }
+  .col-trl { flex: 1; min-width: 0; }
+  .col-tam { width: 58px; flex-shrink: 0; text-align: right; }
+  .col-divider { width: 1px; height: 12px; background: #e5e7eb; flex-shrink: 0; }
+  .col-label { font-size: 9px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
+  .group-label { font-size: 9px; color: #6b7280; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* Rows */
+  .row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+  .row-name { width: 88px; flex-shrink: 0; font-size: 11px; font-weight: 600; color: #4b5563; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row-count { width: 28px; flex-shrink: 0; font-size: 11px; font-weight: 600; color: #374151; text-align: right; }
+  .row-trl { flex: 1; min-width: 0; display: flex; align-items: center; gap: 3px; }
+  .row-tam { width: 58px; flex-shrink: 0; font-size: 11px; text-align: right; }
+  .row-divider { width: 1px; height: 16px; background: #e5e7eb; flex-shrink: 0; }
+  .top-tam { font-weight: 700; color: #2563eb; }
+  .normal-tam { font-weight: 500; color: #6b7280; }
+
+  /* TRL bar — segments */
+  .trl-bar { display: flex; align-items: center; gap: 1px; flex: 1; }
+  .trl-seg { height: 6px; border-radius: 2px; flex: 1; }
+  .trl-num { font-size: 11px; font-weight: 600; color: #6b7280; width: 14px; text-align: right; flex-shrink: 0; }
+
+  /* Column header group labels */
+  .col-group { display: flex; gap: 6px; align-items: center; }
+
+  /* Section divider label */
+  .section-divider { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .section-line { flex: 1; height: 1px; background: #f3f4f6; }
+</style>
+</head>
+<body>
+<div class="panel">
+
+  <!-- Header row: axis + multi-select switcher -->
+  <div class="header-row">
+    <button class="axis-btn active">産業 5</button>
+    <button class="axis-btn">技術特性 7</button>
+    <button class="axis-btn">技術レイヤー 4</button>
+
+    <!-- Multi-select: both can be active -->
+    <div class="switcher">
+      <button class="sw-btn active">平均</button>
+      <button class="sw-btn active">最大</button>
+    </div>
+  </div>
+
+  <!-- Summary / サマリー card — BOTH avg + max selected → 2 TRL columns -->
+  <div class="summary-card">
+    <div class="summary-header">
+      <span>✦</span>
+      <span>サマリー</span>
+      <span class="chevron">▾</span>
+    </div>
+
+    <div class="summary-table">
+      <!-- Column headers: name | 件数 | [avg TRL | avg TAM] | [max TRL | max TAM] -->
+      <div class="col-headers">
+        <span class="col-name col-label"></span>
+        <span class="col-count col-label">件数</span>
+        <!-- avg group -->
+        <span class="col-trl col-label" style="margin-left:4px;">TRL <span style="color:#2563eb;font-weight:600;">平均</span></span>
+        <span class="col-tam col-label">市場規模</span>
+        <!-- divider -->
+        <span class="col-divider"></span>
+        <!-- max group -->
+        <span class="col-trl col-label">TRL <span style="color:#6b7280;font-weight:600;">最大</span></span>
+        <span class="col-tam col-label">市場規模</span>
+      </div>
+
+      <!-- Row: 情報通信 3 -->
+      <div class="row">
+        <span class="row-name">情報通信</span>
+        <span class="row-count">3</span>
+        <!-- avg TRL -->
+        <div class="row-trl" style="margin-left:4px;">
+          <div class="trl-bar" id="bar-avg-1"></div>
+          <span class="trl-num">5.7</span>
+        </div>
+        <span class="row-tam normal-tam">9.1B$</span>
+        <span class="row-divider"></span>
+        <!-- max TRL -->
+        <div class="row-trl">
+          <div class="trl-bar" id="bar-max-1"></div>
+          <span class="trl-num">7</span>
+        </div>
+        <span class="row-tam top-tam">12.4B$</span>
+      </div>
+
+      <!-- Row: 医療 1 -->
+      <div class="row">
+        <span class="row-name">医療</span>
+        <span class="row-count">1</span>
+        <div class="row-trl" style="margin-left:4px;">
+          <div class="trl-bar" id="bar-avg-2"></div>
+          <span class="trl-num">6</span>
+        </div>
+        <span class="row-tam normal-tam">4.2B$</span>
+        <span class="row-divider"></span>
+        <div class="row-trl">
+          <div class="trl-bar" id="bar-max-2"></div>
+          <span class="trl-num">6</span>
+        </div>
+        <span class="row-tam normal-tam">4.2B$</span>
+      </div>
+
+      <!-- Row: 金融 1 -->
+      <div class="row">
+        <span class="row-name">金融</span>
+        <span class="row-count">1</span>
+        <div class="row-trl" style="margin-left:4px;">
+          <div class="trl-bar" id="bar-avg-3"></div>
+          <span class="trl-num">5</span>
+        </div>
+        <span class="row-tam normal-tam">9.8B$</span>
+        <span class="row-divider"></span>
+        <div class="row-trl">
+          <div class="trl-bar" id="bar-max-3"></div>
+          <span class="trl-num">5</span>
+        </div>
+        <span class="row-tam normal-tam">9.8B$</span>
+      </div>
+
+      <!-- Row: セキュリティ 1 -->
+      <div class="row">
+        <span class="row-name">セキュリティ</span>
+        <span class="row-count">1</span>
+        <div class="row-trl" style="margin-left:4px;">
+          <div class="trl-bar" id="bar-avg-4"></div>
+          <span class="trl-num">4</span>
+        </div>
+        <span class="row-tam normal-tam">3.5B$</span>
+        <span class="row-divider"></span>
+        <div class="row-trl">
+          <div class="trl-bar" id="bar-max-4"></div>
+          <span class="trl-num">4</span>
+        </div>
+        <span class="row-tam normal-tam">3.5B$</span>
+      </div>
+
+      <!-- Row: 計測機器 1 -->
+      <div class="row">
+        <span class="row-name">計測機器</span>
+        <span class="row-count">1</span>
+        <div class="row-trl" style="margin-left:4px;">
+          <div class="trl-bar" id="bar-avg-5"></div>
+          <span class="trl-num">4</span>
+        </div>
+        <span class="row-tam normal-tam">2.7B$</span>
+        <span class="row-divider"></span>
+        <div class="row-trl">
+          <div class="trl-bar" id="bar-max-5"></div>
+          <span class="trl-num">4</span>
+        </div>
+        <span class="row-tam normal-tam">2.7B$</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const COLORS = ["#fecaca","#fed7aa","#fef08a","#d9f99d","#bbf7d0","#99f6e4","#a5f3fc","#bae6fd","#bfdbfe"]
+
+function renderBar(id, trl) {
+  const el = document.getElementById(id)
+  if (!el) return
+  const filled = Math.round(trl)
+  el.innerHTML = Array.from({length: 9}, (_, i) =>
+    `<div class="trl-seg" style="background:${i < filled ? COLORS[i] : '#e5e7eb'}"></div>`
+  ).join('')
+}
+
+// avg TRLs
+renderBar('bar-avg-1', 5.7)
+renderBar('bar-avg-2', 6)
+renderBar('bar-avg-3', 5)
+renderBar('bar-avg-4', 4)
+renderBar('bar-avg-5', 4)
+
+// max TRLs
+renderBar('bar-max-1', 7)
+renderBar('bar-max-2', 6)
+renderBar('bar-max-3', 5)
+renderBar('bar-max-4', 4)
+renderBar('bar-max-5', 4)
+</script>
+</body>
+</html>

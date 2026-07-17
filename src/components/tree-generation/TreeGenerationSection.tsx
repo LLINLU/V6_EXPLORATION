@@ -15,6 +15,7 @@ import { triggerEnrichmentRefresh } from "@/stores/enrichedDataStore"
 import type { Keyword, TechCharacteristic, TechStrength } from "@/types/axis"
 import type { Scenario } from "@/types/scenario"
 import { GenerationInputPanel } from "./GenerationInputPanel"
+import { GenerationModeSelector } from "./GenerationModeSelector"
 import { SuggestionList } from "./SuggestionList"
 
 type GenerationMode = "TED" | "SOCIAL_PROBLEM" | "FAST" | "QUERY"
@@ -38,7 +39,7 @@ export const TreeGenerationSection = () => {
 	const { t } = useTranslation()
 
 	const [searchValue, setSearchValue] = useState("")
-	const [selectedMode, setSelectedMode] = useState<GenerationMode>("QUERY")
+	const [selectedMode, setSelectedMode] = useState<GenerationMode>("TED")
 	const [isDeepRefinerMode, setIsDeepRefinerMode] = useState(false)
 	const [isRefinerExpanded, setIsRefinerExpanded] = useState(false)
 	const [selectedKeywords, setSelectedKeywords] = useState<Keyword[]>([])
@@ -47,6 +48,7 @@ export const TreeGenerationSection = () => {
 	const [showTechTable, setShowTechTable] = useState(false)
 	const [techStrengths, setTechStrengths] = useState<TechStrength[]>([])
 	const [isLoadingPipeline, setIsLoadingPipeline] = useState(false)
+	const [showTreeFirst, setShowTreeFirst] = useState(false)
 
 	const pipelineResultRef = useRef<{
 		scenarios?: Scenario[]
@@ -85,6 +87,7 @@ export const TreeGenerationSection = () => {
 		setSelectedMode(mode)
 		setIsDeepRefinerMode(false)
 		setIsRefinerExpanded(false)
+		setShowTreeFirst(false)
 	}
 
 	const handleSuggestionClick = (suggestion: string) => {
@@ -182,141 +185,28 @@ export const TreeGenerationSection = () => {
 		if (e) e.preventDefault()
 		if (!searchValue.trim() || isGenerating) return
 
-		if (isDeepRefinerMode) {
-			navigate("/research-context", {
-				state: {
-					query: searchValue,
-					searchMode:
-						selectedMode === "SOCIAL_PROBLEM"
-							? "social_problem"
-							: selectedMode.toLowerCase(),
-				},
-			})
+		if (selectedMode === "FAST") {
+			navigate("/v1/problem")
 			return
 		}
 
 		if (selectedMode === "QUERY") {
 			navigate("/query-report", {
-				state: {
-					createReport: true,
-					query: searchValue,
-					language: getOutputLanguage(),
-				},
+				state: { createReport: true, query: searchValue, language: getOutputLanguage() },
 			})
 			return
 		}
 
-		if (selectedMode === "FAST" || selectedMode === "SOCIAL_PROBLEM") {
-			const generationMode = selectedMode === "SOCIAL_PROBLEM" ? "TED" : "FAST"
-			try {
-				const results = await generateTree(
-					searchValue,
-					generationMode,
-					undefined,
-					selectedMode === "SOCIAL_PROBLEM" ? "SOCIAL_PROBLEM" : generationMode,
-				)
-				if (!results?.treeId) {
-					sonnerToast.error(t("index.toast_tree_generation_error_title"), {
-						id:
-							selectedMode === "SOCIAL_PROBLEM"
-								? TOAST_IDS.SOCIAL_PROBLEM_GENERATION_FAILED
-								: TOAST_IDS.FAST_GENERATION_FAILED,
-						description: t("index.toast_tree_generation_failed_desc"),
-					})
-					return
-				}
-
-				if (selectedMode === "SOCIAL_PROBLEM") {
-					await ensureSocialProblemModeSaved(results.treeId)
-					enqueueSocialProblemEnrichment(
-						results.treeId,
-						((results as any).scenarios ?? []) as Array<{
-							id: string
-							name?: string
-							description?: string
-						}>,
-					)
-				}
-
-				navigate(`/technology-tree?id=${encodeURIComponent(results.treeId)}`, {
-					state: {
-						query: searchValue,
-						searchMode:
-							selectedMode === "SOCIAL_PROBLEM"
-								? "social_problem"
-								: selectedMode.toLowerCase(),
-						treeId: results.treeId,
-						fromDatabase: true,
-						isDemo: false,
-						mode: generationMode,
-						socialProblemMode: selectedMode === "SOCIAL_PROBLEM",
-					},
-				})
-			} catch (error) {
-				console.error("Tree generation failed:", error)
-				sonnerToast.error(t("index.toast_tree_generation_error_title"), {
-					id:
-						selectedMode === "SOCIAL_PROBLEM"
-							? TOAST_IDS.SOCIAL_PROBLEM_GENERATION_ERROR
-							: TOAST_IDS.FAST_GENERATION_ERROR,
-					description:
-						error instanceof Error
-							? error.message
-							: t("index.toast_tree_generation_error_desc"),
-				})
-			}
+		// TED + showTreeFirst: show mindmap tree first, skip characteristics dialog
+		if (showTreeFirst) {
+			navigate("/v1/treemap")
 			return
 		}
 
-		// TED mode with scenario selection and technical advantages.
+		// TED mode: show tech characteristics dialog with mock data, then navigate to V1 prioritization
 		setShowTechTable(true)
-		setIsLoadingPipeline(true)
-		setTechStrengths([])
-		pipelineResultRef.current = null
-
-		try {
-			const { data: techData, error: techError } =
-				await supabase.functions.invoke("generate-tech-strengths", {
-					body: {
-						searchTheme: searchValue,
-						language: getOutputLanguage(),
-						user_id: userDetails?.user_id,
-						team_id: userDetails?.team_id,
-					},
-				})
-
-			if (techError) {
-				sonnerToast.error(t("index.toast_tech_strengths_failed_title"), {
-					id: TOAST_IDS.TECH_STRENGTHS_FAILED,
-					description: t("index.toast_tech_strengths_failed_desc"),
-				})
-			}
-
-			if (!techData?.treeId) {
-				sonnerToast.error(t("index.toast_tree_id_missing_title"), {
-					id: TOAST_IDS.TREE_ID_MISSING,
-					description: t("common.toast_please_retry"),
-				})
-				setShowTechTable(false)
-				return
-			}
-
-			const strengths: TechStrength[] =
-				!techError && techData.tech_strengths?.length > 0
-					? techData.tech_strengths
-					: generateMockTechStrengths(searchValue)
-
-			setTechStrengths(strengths)
-			pipelineResultRef.current = { treeId: techData.treeId }
-		} catch {
-			sonnerToast.error(t("common.toast_error_title"), {
-				id: TOAST_IDS.PIPELINE_ERROR,
-				description: t("index.toast_pipeline_error_desc"),
-			})
-			setShowTechTable(false)
-		} finally {
-			setIsLoadingPipeline(false)
-		}
+		setTechStrengths(generateMockTechStrengths(searchValue))
+		pipelineResultRef.current = { treeId: "dummy" }
 	}
 
 	const handleTechTableConfirm = async (confirmedStrengths: TechStrength[]) => {
@@ -340,22 +230,7 @@ export const TreeGenerationSection = () => {
 			return
 		}
 
-		navigate(
-			`/scenario-selection?tree_id=${encodeURIComponent(pipelineResult.treeId)}`,
-			{
-				state: {
-					query: searchValue,
-					mode: "TED",
-					treeId: pipelineResult.treeId,
-					scenarios: pipelineResult.scenarios,
-					selectedKeywords:
-						selectedKeywords.length > 0 ? selectedKeywords : undefined,
-					selectedTechCharacteristics:
-						asCharacteristics.length > 0 ? asCharacteristics : undefined,
-					regenerateScenariosOnLoad: false,
-				},
-			},
-		)
+		navigate("/v1/prioritization")
 	}
 
 	const handleAddTechStrength = async (newStrength: TechStrength) => {
@@ -448,15 +323,24 @@ export const TreeGenerationSection = () => {
 
 			<CardContent>
 				<div className="w-full mx-auto mb-8">
+					<div className="mb-2">
+						<GenerationModeSelector
+							selectedMode={selectedMode}
+							isGenerating={isGenerating}
+							onModeChange={handleModeChange}
+						/>
+					</div>
 					<GenerationInputPanel
 						searchValue={searchValue}
 						selectedMode={selectedMode}
 						isDeepRefinerMode={isDeepRefinerMode}
 						isRefinerExpanded={isRefinerExpanded}
 						isGenerating={isGenerating}
+						showTreeFirst={showTreeFirst}
 						onSearchChange={(value) => setSearchValue(value)}
 						onSubmit={() => void handleSubmit()}
 						onModeChange={handleModeChange}
+						onShowTreeFirstChange={setShowTreeFirst}
 						onRefinerExpandedChange={(value) => setIsRefinerExpanded(value)}
 						onKeywordsSelected={(keywords) => setSelectedKeywords(keywords)}
 						onTechCharacteristicsSelected={(items) =>

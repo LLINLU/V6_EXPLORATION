@@ -2,6 +2,7 @@
 
 import {
 	AlignLeft,
+	ArrowLeft,
 	ArrowUp,
 	ChevronDown,
 	Download,
@@ -38,11 +39,11 @@ const MODE_STYLES: Record<Mode, { pill: string; iconColor?: string }> = {
 		pill: "bg-blue-50 text-blue-700 border-[#cddeff]",
 	},
 	FAST: {
-		pill: "bg-[#fdfbff] text-[#9151ce] border-[#d9c1ef]",
-		iconColor: "#9151ce",
+		pill: "bg-blue-50 text-blue-700 border-[#cddeff]",
+		iconColor: "#1d4ed8",
 	},
 	QUERY: {
-		pill: "bg-[#f4fff7] text-emerald-700 border-[#c0ece0]",
+		pill: "bg-blue-50 text-blue-700 border-[#cddeff]",
 	},
 }
 
@@ -55,7 +56,7 @@ function ModeIcon({ mode, active }: { mode: Mode; active: boolean }) {
 			xmlns="http://www.w3.org/2000/svg"
 			width="12"
 			height="12"
-			fill={active ? "#9151ce" : "#9f9f9f"}
+			fill={active ? "#1d4ed8" : "#9f9f9f"}
 			viewBox="0 0 256 256"
 			className="mr-1"
 			aria-hidden
@@ -87,7 +88,6 @@ function ModePill({
 		<span
 			className={`inline-flex items-center text-sm transition-colors border ${sizing} ${s.pill}`}
 		>
-			<ModeIcon mode={mode} active={active} />
 			<span className="max-w-[180px] truncate whitespace-nowrap">{label}</span>
 			{withChevron && (
 				<ChevronDown className="h-3 w-3 ml-1.5 opacity-70" strokeWidth={2.25} />
@@ -331,8 +331,18 @@ export function QueryReportHeader({
 	return (
 		<>
 			<div className="bg-white rounded-lg px-4 py-2 flex items-center justify-between flex-shrink-0 gap-3">
-				{/* Left spacer keeps the search row centered like ScenarioSelectionHeader */}
-				<div className="flex items-center gap-2 shrink-0 w-[100px]" />
+				{/* Back to home */}
+				<div className="flex items-center gap-2 shrink-0 w-[100px]">
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon"
+						onClick={() => navigate("/")}
+						className="h-8 w-8 text-gray-500 hover:text-gray-800"
+					>
+						<ArrowLeft className="h-4 w-4" />
+					</Button>
+				</div>
 
 				{/* Search row with mode dropdown */}
 				<form
@@ -355,21 +365,30 @@ export function QueryReportHeader({
 								/>
 							</button>
 						</DropdownMenuTrigger>
-						<DropdownMenuContent align="start" className="p-1">
-							{(["QUERY", "TED", "FAST"] as Mode[]).map((m) => (
-								<DropdownMenuItem
-									key={m}
-									onSelect={() => {
-										setMode(m)
-										if (m === "TED" && queryId) {
-											void handleOpenScenarioSelection()
-										}
-									}}
-									className="p-1 focus:bg-transparent cursor-pointer"
-								>
-									<ModePill mode={m} active={mode === m} label={labels[m]} />
-								</DropdownMenuItem>
-							))}
+						<DropdownMenuContent align="start" className="w-52 py-1">
+							<DropdownMenuItem
+								onSelect={() => setMode("QUERY")}
+								className="flex items-center justify-between px-3 py-2 text-sm cursor-pointer"
+							>
+								<span>{labels["QUERY"]}</span>
+								{mode === "QUERY" && (
+									<svg viewBox="0 0 8 6" className="w-3 h-3 shrink-0 text-blue-600" fill="none">
+										<path d="M1 3l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+									</svg>
+								)}
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onSelect={() => navigate("/v1/prioritization")}
+								className="flex items-center justify-between px-3 py-2 text-sm cursor-pointer"
+							>
+								<span>シナリオを探索する</span>
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onSelect={() => navigate("/v1/treemap")}
+								className="flex items-center justify-between px-3 py-2 text-sm cursor-pointer"
+							>
+								<span>ツリーマップを直接生成する</span>
+							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
 

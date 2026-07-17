@@ -195,14 +195,14 @@ export const MainContent = ({
 				<div className="bg-white overflow-hidden rounded-lg p-4">
 					<div className="mb-0" style={{ paddingTop: "0rem" }}>
 						<div className="flex justify-between items-center mb-1">
-							<div className="flex items-center gap-2">
-								<h3
-									className="text-gray-800"
-									style={{ fontSize: "16px", fontWeight: 600 }}
-								>
-									研究分野の階層表示
-								</h3>
+							<h3
+								className="text-gray-800"
+								style={{ fontSize: "16px", fontWeight: 600 }}
+							>
+								この技術を分解した結果
+							</h3>
 
+							<div className="flex items-center gap-2">
 								{/* How1 Add Button - FAST mode only */}
 								{treeMode === "FAST" && (
 									<button
@@ -215,7 +215,7 @@ export const MainContent = ({
 										className="inline-flex items-center justify-center gap-1 rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-white text-gray-800 hover:bg-[#e8f1ff] hover:border-[#90aff7] px-2 py-1 h-7"
 									>
 										<Plus className="h-3 w-3" />
-										技術要素1追加
+										実現手法追加
 									</button>
 								)}
 

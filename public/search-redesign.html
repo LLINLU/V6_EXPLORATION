@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search Redesign</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+    background: #f3f4f6;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+
+  .page { width: 100%; max-width: 680px; }
+
+  /* Title */
+  .title {
+    text-align: center;
+    font-size: 30px;
+    font-weight: 600;
+    margin-bottom: 28px;
+    background: -webkit-linear-gradient(left, #0049ab 30%, #a855f7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Tab group ── */
+  .tab-group {
+    display: inline-flex;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 3px;
+    margin-bottom: 8px;
+    gap: 2px;
+  }
+  .tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s;
+    color: #9ca3af;
+    user-select: none;
+  }
+  .tab.active-tech {
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+  .tab.active-prob {
+    background: #f5f3ff;
+    color: #7c3aed;
+  }
+  .tab-icon { font-size: 12px; }
+
+  /* ── Search box ── */
+  .search-box {
+    background: #fbfbfb;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 16px 18px 14px;
+    transition: border-color .15s;
+  }
+  .search-box:focus-within { border-color: #93c5fd; }
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0;
+  }
+  .input-mock {
+    flex: 1;
+    font-size: 15px;
+    color: #9ca3af;
+    line-height: 1.5;
+    padding: 6px 0;
+  }
+  .submit-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #f3f4f6;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    color: #6b7280;
+  }
+
+  /* ── Optional row inside box ── */
+  .options-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;
+    flex-wrap: wrap;
+  }
+
+  .toggle-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 99px;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: all .15s;
+  }
+  .toggle-pill.off {
+    background: transparent;
+    color: #9ca3af;
+    border: 1px solid #e5e7eb;
+  }
+  .toggle-pill.off:hover { background: #f9fafb; color: #6b7280; }
+
+  .toggle-pill.on-blue {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+  }
+  .toggle-pill.on-amber {
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+  }
+
+  .chk {
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    border: 1.5px solid currentColor;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    opacity: .5;
+  }
+  .chk.checked {
+    background: #2563eb;
+    border-color: #2563eb;
+    opacity: 1;
+  }
+  .chk.checked-amber {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    opacity: 1;
+  }
+  .checkmark { display: block; width: 7px; height: 7px; }
+
+  /* ── Suggestions ── */
+  .suggestions {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .sug-label {
+    font-size: 12px;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .sug-chip {
+    font-size: 12px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    padding: 3px 11px;
+    border-radius: 99px;
+    color: #374151;
+    cursor: pointer;
+    transition: border-color .15s;
+    user-select: none;
+  }
+  .sug-chip:hover { border-color: #93c5fd; color: #1d4ed8; }
+
+  /* ── State switcher (for demo) ── */
+  .demo-controls {
+    margin-top: 32px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+  .demo-btn {
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    cursor: pointer;
+    color: #6b7280;
+  }
+  .demo-btn.active { background: #1e293b; color: #fff; border-color: #1e293b; }
+
+  /* ── Annotation ── */
+  .annotation {
+    margin-top: 24px;
+    padding: 14px 16px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.8;
+  }
+  .annotation b { color: #1e293b; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="title">研究情報を俯瞰する</div>
+
+  <!-- Tab group — OUTSIDE the search box -->
+  <div id="tabGroup" class="tab-group">
+    <div class="tab active-tech" onclick="setMode('tech')">
+      <span class="tab-icon">♀</span> 技術起点
+    </div>
+    <div class="tab" id="tabProb" onclick="setMode('prob')">
+      <span class="tab-icon">⊠</span> 問題起点
+    </div>
+  </div>
+
+  <!-- Search box — only optional toggles live here -->
+  <div class="search-box">
+    <div class="input-row">
+      <div class="input-mock" id="placeholder">クエリを入力すると、関連するシナリオと技術コンポーネントが生成されます。</div>
+      <button class="submit-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Optional row: visible only in tech mode -->
+    <div class="options-row" id="optionsRow">
+      <span class="toggle-pill off" id="toggleReport" onclick="toggle('report')">
+        <span class="chk" id="chkReport"></span>
+        技術の全体像を把握する
+      </span>
+      <span class="toggle-pill off" id="toggleTree" onclick="toggle('tree')">
+        <span class="chk" id="chkTree"></span>
+        技術ツリーを先に確認する
+      </span>
+    </div>
+  </div>
+
+  <!-- Suggestions -->
+  <div class="suggestions" id="suggestions">
+    <span class="sug-label">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="#a78bfa"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+      試してみる：
+    </span>
+    <span class="sug-chip" id="sug1">全固体電池</span>
+    <span class="sug-chip" id="sug2">mRNA治療薬</span>
+    <span class="sug-chip" id="sug3">ニューロモーフィックコンピューティング</span>
+  </div>
+
+  <!-- Demo controls -->
+  <div class="demo-controls">
+    <button class="demo-btn active" onclick="setMode('tech')">技術起点 selected</button>
+    <button class="demo-btn" onclick="setMode('prob')">問題起点 selected</button>
+    <button class="demo-btn" id="btnBothOn" onclick="setBoth()">両オプション ON</button>
+  </div>
+
+  <!-- Annotation -->
+  <div class="annotation" id="annotation">
+    <b>技術起点が選択されているとき：</b> 検索ボックス内に2つのオプショントグルが現れる。どちらも未チェックがデフォルト（→技術特性 Dialog → シナリオ選定）。
+  </div>
+
+</div>
+
+<script>
+  let mode = 'tech'
+  let reportOn = false
+  let treeOn = false
+
+  const PLACEHOLDERS = {
+    tech: 'クエリを入力すると、関連するシナリオと技術コンポーネントが生成されます。',
+    prob: '解決したい問題を入力すると、ボトルネック分解と解決シナリオを探索します。',
+  }
+  const SUGS = {
+    tech: ['全固体電池', 'mRNA治療薬', 'ニューロモーフィックコンピューティング'],
+    prob: ['地域コミュニティの孤立', '中小企業の採用難', '医療アクセスの格差'],
+  }
+  const ANNOTATIONS = {
+    default: '<b>技術起点が選択されているとき：</b> 検索ボックス内に2つのオプショントグルが現れる。どちらも未チェックがデフォルト（→技術特性 Dialog → シナリオ選定）。',
+    reportOn: '<b>「技術の全体像を把握する」ON：</b> Submit → クエリレポート（既存ページ）→ その後シナリオ選定へ合流。',
+    treeOn: '<b>「技術ツリーを先に確認する」ON：</b> Submit → FASTで技術ツリー（マインドマップ）→ ツリーページ上の「シナリオ探索へ」ボタンで合流。',
+    bothOn: '<b>両方 ON：</b> クエリレポート → 技術ツリー → シナリオ選定の順で段階的に確認できる。',
+    prob: '<b>問題起点が選択されているとき：</b> オプショントグルは非表示。Submit → 問題精緻化 → BN分解 → 解決シナリオへ直行。',
+  }
+
+  function setMode(m) {
+    mode = m
+    reportOn = false
+    treeOn = false
+
+    // tabs
+    document.querySelectorAll('.tab').forEach(t => t.className = 'tab')
+    if (m === 'tech') {
+      document.querySelector('.tab').className = 'tab active-tech'
+    } else {
+      document.getElementById('tabProb').className = 'tab active-prob'
+    }
+
+    // placeholder
+    document.getElementById('placeholder').textContent = PLACEHOLDERS[m]
+
+    // options row
+    document.getElementById('optionsRow').style.display = m === 'tech' ? '' : 'none'
+
+    // reset toggles
+    updateToggle('report', false)
+    updateToggle('tree', false)
+
+    // suggestions
+    const chips = [document.getElementById('sug1'), document.getElementById('sug2'), document.getElementById('sug3')]
+    SUGS[m].forEach((s, i) => chips[i].textContent = s)
+
+    // demo buttons
+    document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'))
+    event.target.classList.add('active')
+
+    // annotation
+    document.getElementById('annotation').innerHTML = m === 'prob' ? ANNOTATIONS.prob : ANNOTATIONS.default
+  }
+
+  function toggle(which) {
+    if (mode !== 'tech') return
+    if (which === 'report') reportOn = !reportOn
+    if (which === 'tree') treeOn = !treeOn
+    updateToggle('report', reportOn)
+    updateToggle('tree', treeOn)
+
+    let key = 'default'
+    if (reportOn && treeOn) key = 'bothOn'
+    else if (reportOn) key = 'reportOn'
+    else if (treeOn) key = 'treeOn'
+    document.getElementById('annotation').innerHTML = ANNOTATIONS[key]
+  }
+
+  function setBoth() {
+    if (mode !== 'tech') setModeOnly('tech')
+    reportOn = true
+    treeOn = true
+    updateToggle('report', true)
+    updateToggle('tree', true)
+    document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'))
+    document.getElementById('btnBothOn').classList.add('active')
+    document.getElementById('annotation').innerHTML = ANNOTATIONS.bothOn
+  }
+
+  function updateToggle(which, on) {
+    const pill = document.getElementById('toggle' + (which === 'report' ? 'Report' : 'Tree'))
+    const chk  = document.getElementById('chk'   + (which === 'report' ? 'Report' : 'Tree'))
+    if (on) {
+      pill.className = 'toggle-pill ' + (which === 'report' ? 'on-blue' : 'on-amber')
+      chk.className  = 'chk ' + (which === 'report' ? 'checked' : 'checked-amber')
+      chk.innerHTML  = '<svg class="checkmark" viewBox="0 0 8 6" fill="none"><path d="M1 3l2 2 4-4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    } else {
+      pill.className = 'toggle-pill off'
+      chk.className  = 'chk'
+      chk.innerHTML  = ''
+    }
+  }
+</script>
+</body>
+</html>

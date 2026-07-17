@@ -9,6 +9,7 @@ export interface TreeNode {
 	isCustom?: boolean
 	level?: number
 	children_count?: number // Number of children nodes, 0 indicates generation in progress
+	trl?: number // TRL 1–9
 }
 export interface SelectedNode {
 	id: string

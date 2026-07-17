@@ -14,6 +14,7 @@ interface TabNavigatorProps {
 	showSummaryTab?: boolean
 	loadingSummary?: boolean
 	showTechSeedsTab?: boolean
+	showTrlTab?: boolean
 }
 
 export const TabNavigator = ({
@@ -28,6 +29,7 @@ export const TabNavigator = ({
 	showSummaryTab = false,
 	loadingSummary = false,
 	showTechSeedsTab: _showTechSeedsTab = false, // Tech Seeds暫定廃止
+	showTrlTab = false,
 }: TabNavigatorProps) => {
 	const { t } = useTranslation()
 	const countLabel = (count?: number) =>
@@ -76,6 +78,14 @@ export const TabNavigator = ({
 							<Loader2 className="w-4 h-4 mr-2 animate-spin" />
 						)}
 						{t("tech.tab_report")}
+					</TabsTrigger>
+				)}
+				{showTrlTab && (
+					<TabsTrigger
+						value="trl"
+						className="flex items-center data-[state=active]:text-blue-600 data-[state=active]:shadow-[inset_0_-2px_0_0_#2563eb] px-0 py-2 rounded-none bg-transparent text-gray-600 hover:text-blue-600 flex-shrink-0 text-[13px]"
+					>
+						TRL
 					</TabsTrigger>
 				)}
 				{/* Tech Seeds暫定廃止

@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { ApiError } from "@/lib/apiClient"
 import { getOutputLanguage } from "@/lib/outputLanguage"
 import { queryReportApiService } from "@/services/queryReportApiService"
+import { DUMMY_QUERY_REPORT } from "@/data/dummyQueryReport"
 
 type BootstrapStage = "technical_advantage" | "report_start" | null
 
@@ -350,6 +351,30 @@ function QueryReportFailed({
 	)
 }
 
+function DummyQueryReport({ query }: { query: string }) {
+	const dummyData = { ...DUMMY_QUERY_REPORT, theme: query || DUMMY_QUERY_REPORT.theme }
+	return (
+		<SidebarProvider defaultOpen={true}>
+			<div className="min-h-screen flex w-full">
+				<AppSidebar />
+				<div className="flex-1 h-screen overflow-hidden">
+					<div className="relative h-full">
+						<SidebarTrigger className="absolute left-4 top-4 md:hidden z-10" />
+						<div className="h-full bg-[#EEEEEE] p-1 flex flex-col overflow-hidden gap-1">
+							<QueryReportHeader query={dummyData.theme} reportData={dummyData} />
+							<div className="flex-1 min-h-0 bg-white rounded-lg overflow-auto">
+								<div className="max-w-[1180px] mx-auto px-6 py-6">
+									<QueryReportView data={dummyData} isExpanded={true} />
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</SidebarProvider>
+	)
+}
+
 export default function QueryReportPreview() {
 	const [params] = useSearchParams()
 	const location = useLocation()
@@ -363,6 +388,11 @@ export default function QueryReportPreview() {
 	const initialQueryId = params.get("id")
 	const bootstrapQuery = locationState.query?.trim() ?? ""
 	const shouldBootstrap = Boolean(locationState.createReport && bootstrapQuery)
+
+	// V1 exploration: render dummy report instantly, no API calls
+	if (locationState.createReport && !initialQueryId) {
+		return <DummyQueryReport query={bootstrapQuery} />
+	}
 	const [generatedQueryId, setGeneratedQueryId] = useState<string | null>(null)
 	const [bootstrapStage, setBootstrapStage] = useState<BootstrapStage>(
 		shouldBootstrap ? "technical_advantage" : null,

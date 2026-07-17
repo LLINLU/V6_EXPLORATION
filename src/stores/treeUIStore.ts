@@ -27,6 +27,12 @@ interface TreeUIState {
 
 	// Chat UI state
 	chatBoxOpen: boolean
+
+	// TRL color mode
+	trlColorMode: boolean
+
+	// TRL panel selected tech (persists across panel expand/collapse remounts)
+	selectedTrlTech: { name: string; explanation: string; trl: number | null; interpretation: string } | null
 }
 
 interface TreeUIActions {
@@ -65,6 +71,13 @@ interface TreeUIActions {
 	setChatBoxOpen: (open: boolean) => void
 	toggleChatBoxOpen: () => void
 
+	// TRL color mode
+	toggleTrlColorMode: () => void
+	setTrlColorMode: (on: boolean) => void
+
+	// TRL panel selected tech
+	setSelectedTrlTech: (tech: { name: string; explanation: string; trl: number | null; interpretation: string } | null) => void
+
 	// Initialization action (from useTreeEffects)
 	initializeUI: () => void
 }
@@ -86,6 +99,8 @@ export const useTreeUIStore = create<TreeUIState & TreeUIActions>(
 		mindmapPanZoomState: { zoom: 1, panX: 0, panY: 0 },
 		justSwitchedView: false,
 		chatBoxOpen: false,
+		trlColorMode: false,
+		selectedTrlTech: null,
 
 		// Actions
 		toggleView: () =>
@@ -149,6 +164,12 @@ export const useTreeUIStore = create<TreeUIState & TreeUIActions>(
 		setChatBoxOpen: (open: boolean) => set({ chatBoxOpen: open }),
 		toggleChatBoxOpen: () =>
 			set((state) => ({ chatBoxOpen: !state.chatBoxOpen })),
+
+		toggleTrlColorMode: () =>
+			set((state) => ({ trlColorMode: !state.trlColorMode })),
+		setTrlColorMode: (on: boolean) => set({ trlColorMode: on }),
+
+		setSelectedTrlTech: (tech) => set({ selectedTrlTech: tech }),
 
 		// Initialization action (from useTreeEffects)
 		initializeUI: () => {

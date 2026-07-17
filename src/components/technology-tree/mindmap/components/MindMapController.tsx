@@ -35,6 +35,7 @@ interface MindMapControllerProps {
 	chatboxContent?: React.ReactNode
 	toolbarOrientation?: "vertical" | "horizontal"
 	treeMode?: string
+	hideTrlToggle?: boolean
 }
 
 export const MindMapController: React.FC<MindMapControllerProps> = ({
@@ -45,6 +46,7 @@ export const MindMapController: React.FC<MindMapControllerProps> = ({
 	chatboxContent,
 	treeMode,
 	toolbarOrientation = "vertical",
+	hideTrlToggle = false,
 }) => {
 	const { state } = useMindMap()
 	const { nodes } = useMindMapData()
@@ -97,6 +99,7 @@ export const MindMapController: React.FC<MindMapControllerProps> = ({
 			justSwitchedView={justSwitchedView}
 			toolbarOrientation={toolbarOrientation}
 			treeMode={treeMode}
+			hideTrlToggle={hideTrlToggle}
 		/>
 	)
 }
