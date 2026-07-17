@@ -1,4 +1,6 @@
+import type React from "react"
 import { useState } from "react"
+import { ScenarioSelectionMainLayout } from "@/components/scenario-selection/ScenarioSelectionMainLayout"
 import type { Scenario } from "@/types/scenario"
 
 // Design exploration: static category mappings for quantum computing scenarios
@@ -28,15 +30,19 @@ interface TimingInfo {
   key: TimingKey
   bg: string
   text: string
+  badgeStyle: React.CSSProperties
+  selectedBadgeStyle: React.CSSProperties
 }
+
+const BADGE_COLOR = "#1f2937"
 
 function getTimingInfo(paperCagr: number, patentCagr: number): TimingInfo {
   const ph = paperCagr >= 4.6
   const pth = patentCagr >= 5
-  if (ph && pth) return { label: "成長期", key: "grow", bg: "bg-emerald-100", text: "text-emerald-700" }
-  if (ph && !pth) return { label: "黎明期", key: "dawn", bg: "bg-purple-100", text: "text-purple-700" }
-  if (!ph && pth) return { label: "成熟期", key: "mature", bg: "bg-amber-100", text: "text-amber-700" }
-  return { label: "衰退期", key: "decline", bg: "bg-red-100", text: "text-red-700" }
+  if (ph && pth) return { label: "成長期", key: "grow", bg: "bg-emerald-100", text: "text-emerald-700", badgeStyle: { backgroundColor: "#f3fdf8", color: BADGE_COLOR }, selectedBadgeStyle: { backgroundColor: "#cff7de", color: BADGE_COLOR } }
+  if (ph && !pth) return { label: "黎明期", key: "dawn", bg: "bg-purple-100", text: "text-purple-700", badgeStyle: { backgroundColor: "#f5f3ff", color: BADGE_COLOR }, selectedBadgeStyle: { backgroundColor: "#f5f3ff", color: BADGE_COLOR } }
+  if (!ph && pth) return { label: "成熟期", key: "mature", bg: "bg-amber-100", text: "text-amber-700", badgeStyle: { backgroundColor: "#fffbeb", color: BADGE_COLOR }, selectedBadgeStyle: { backgroundColor: "#fffbeb", color: BADGE_COLOR } }
+  return { label: "衰退期", key: "decline", bg: "bg-red-100", text: "text-red-700", badgeStyle: { backgroundColor: "#fff1f2", color: BADGE_COLOR }, selectedBadgeStyle: { backgroundColor: "#fff1f2", color: BADGE_COLOR } }
 }
 
 function fmtTam(v: number) {
@@ -83,6 +89,7 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
   const [selectedAttract, setSelectedAttract] = useState<Set<string>>(new Set())
   const [selectedTiming, setSelectedTiming] = useState<Set<string>>(new Set())
   const [attractSort, setAttractSort] = useState<"cagr" | "tam">("cagr")
+  const [resultView, setResultView] = useState<"card" | "table">("card")
 
   const allIndustries = Array.from(new Set(scenarios.map((s) => IND[s.id]).filter(Boolean)))
   const allTechLayers = Array.from(new Set(scenarios.map((s) => KF[s.id]).filter(Boolean)))
@@ -119,7 +126,7 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
               onClick={() => setSelectedMarkets(toggleSet(selectedMarkets, ind))}
               className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors ${
                 on
-                  ? "border-blue-500 bg-blue-50 text-blue-700 font-semibold"
+                  ? "border-blue-500 bg-blue-50 text-blue-700 font-normal"
                   : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
               }`}
             >
@@ -165,7 +172,7 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
               onClick={() => setAttractSort(s)}
               className={`px-2.5 py-1 rounded-md border text-xs transition-colors ${
                 attractSort === s
-                  ? "border-blue-500 bg-blue-50 text-blue-700 font-semibold"
+                  ? "border-blue-500 bg-blue-50 text-blue-700 font-normal"
                   : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
               }`}
             >
@@ -238,12 +245,12 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
         </div>
         <div className="flex flex-wrap gap-1.5 mb-3">
           {[
-            { label: "成長期", sub: "論文↑・特許↑ 参入好機", bg: "bg-emerald-50", text: "text-emerald-700" },
-            { label: "黎明期", sub: "論文↑・特許→ 先行仕込み", bg: "bg-purple-50", text: "text-purple-700" },
-            { label: "成熟期", sub: "論文→・特許↑ 後発注意", bg: "bg-amber-50", text: "text-amber-700" },
-            { label: "衰退期", sub: "論文↓・特許↓ 見極め", bg: "bg-red-50", text: "text-red-700" },
+            { label: "成長期", sub: "論文↑・特許↑ 参入好機", bg: "", style: { backgroundColor: "#f3fdf8" } },
+            { label: "黎明期", sub: "論文↑・特許→ 先行仕込み", bg: "bg-purple-50", style: {} },
+            { label: "成熟期", sub: "論文→・特許↑ 後発注意", bg: "bg-amber-50", style: {} },
+            { label: "衰退期", sub: "論文↓・特許↓ 見極め", bg: "bg-red-50", style: {} },
           ].map((t) => (
-            <span key={t.label} className={`${t.bg} ${t.text} rounded-full px-2.5 py-1 text-[11px] font-medium whitespace-nowrap`}>
+            <span key={t.label} className={`${t.bg} rounded-full px-2.5 py-1 text-[11px] font-medium whitespace-nowrap`} style={{ color: "#1f2937", ...t.style }}>
               {t.label}
               <span className="font-normal opacity-70 ml-1">{t.sub}</span>
             </span>
@@ -266,14 +273,11 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
                 <div>
                   <div className="text-xs font-semibold text-gray-800 leading-snug mb-1.5">{s.name}</div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${timing.bg} ${timing.text}`}>
-                      {timing.label}
-                    </span>
                     <span className="text-[10px] text-gray-500">論文CAGR {s.metrics?.papers?.cagr ?? 0}%</span>
                     <span className="text-[10px] text-gray-500">特許CAGR {s.metrics?.patents?.cagr ?? 0}%</span>
                   </div>
                 </div>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium flex-shrink-0 self-start ${timing.bg} ${timing.text}`}>
+                <span className="text-[10px] px-1.5 py-0.5 rounded font-medium flex-shrink-0 self-start" style={on ? timing.selectedBadgeStyle : timing.badgeStyle}>
                   {timing.label}
                 </span>
               </div>
@@ -306,25 +310,56 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
         市場規模と成長率の観点から{selectedAttract.size}件を選定。
         参入タイミングを評価し、{finalScenarios.length}件の有望シナリオを特定しました。
       </div>
-      <div className="flex flex-col gap-2 mb-4">
-        {finalScenarios.map((s) => {
-          const timing = getTimingInfo(s.metrics?.papers?.cagr ?? 0, s.metrics?.patents?.cagr ?? 0)
-          return (
-            <div key={s.id} className="border border-gray-200 rounded-lg p-3 bg-white">
-              <div className="text-xs font-semibold text-gray-900 mb-2 leading-snug">{s.name}</div>
-              <div className="flex items-center gap-2 flex-wrap mb-2">
-                <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{IND[s.id]}</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${timing.bg} ${timing.text}`}>
-                  {timing.label}
-                </span>
-                <span className="text-[10px] text-gray-500">TAM {fmtTam(s.metrics?.tam ?? 0)}</span>
-                <span className="text-[10px] text-gray-500">CAGR {s.metrics?.cagr ?? 0}%</span>
-              </div>
-              <TrlBar trl={s.metrics?.trl ?? 0} />
-            </div>
-          )
-        })}
+
+      <div className="border-t border-gray-200 mb-4 -mx-4" />
+
+      {/* View toggle */}
+      <div className="flex items-center gap-1 mb-3 bg-gray-100 rounded-lg p-0.5 w-fit">
+        {(["card", "table"] as const).map((v) => (
+          <button
+            key={v}
+            onClick={() => setResultView(v)}
+            className={`text-xs px-3 py-1.5 rounded-md transition-colors font-medium ${
+              resultView === v ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {v === "card" ? "カード" : "テーブル"}
+          </button>
+        ))}
       </div>
+
+      {resultView === "card" ? (
+        <div className="flex flex-col gap-2 mb-4">
+          {finalScenarios.map((s) => {
+            const timing = getTimingInfo(s.metrics?.papers?.cagr ?? 0, s.metrics?.patents?.cagr ?? 0)
+            return (
+              <div key={s.id} className="border border-gray-200 rounded-lg p-3 bg-white">
+                <div className="text-xs font-semibold text-gray-900 mb-2 leading-snug">{s.name}</div>
+                <div className="flex items-center gap-2 flex-wrap mb-2">
+                  <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{IND[s.id]}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={timing.badgeStyle}>
+                    {timing.label}
+                  </span>
+                  <span className="text-[10px] text-gray-500">TAM {fmtTam(s.metrics?.tam ?? 0)}</span>
+                  <span className="text-[10px] text-gray-500">CAGR {s.metrics?.cagr ?? 0}%</span>
+                </div>
+                <TrlBar trl={s.metrics?.trl ?? 0} />
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <div className="mb-4 -mx-4">
+          <ScenarioSelectionMainLayout
+            scenarios={finalScenarios}
+            treeId="v1-guide-result"
+            technicalStrengths={[]}
+            query=""
+            effectiveMode="FAST"
+          />
+        </div>
+      )}
+
       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
         <button onClick={() => setStep(2)} className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-md hover:border-gray-300 transition-colors">
           ← 戻る

@@ -161,6 +161,91 @@ function DummyMindmap({ rootName }: { rootName: string }) {
 
 type TrlRow = { name: string; explanation: string; trl: number | null; interpretation: string }
 
+const ORDINALS = ["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧"]
+
+function buildTrlSummary(rows: TrlRow[]): string {
+	const valid = rows.filter((r) => r.trl != null).map((r) => r.trl as number)
+	if (!valid.length) return ""
+	const avg = Math.round((valid.reduce((a, b) => a + b, 0) / valid.length) * 10) / 10
+	const stage = avg >= 7 ? "実用化段階" : avg >= 5 ? "開発・検証段階" : "研究・実証段階"
+	const maxTrl = Math.max(...valid)
+	const minTrl = Math.min(...valid)
+	const highest = rows.find((r) => r.trl === maxTrl)
+	const lowest = rows.find((r) => r.trl === minTrl && r !== highest)
+	return (
+		`このシナリオを構成する${rows.length}件のコア技術の平均TRLは${avg}であり、全体として${stage}にあります。` +
+		(highest ? `特に「${highest.name}」はTRL ${maxTrl}と最も成熟度が高く、${highest.interpretation}の段階に達しています。` : "") +
+		(lowest ? `一方「${lowest.name}」はTRL ${minTrl}と相対的に初期段階にあり、引き続き研究開発が必要です。` : "")
+	)
+}
+
+function trlNodeColors(trl: number | null): { bg: string; border: string; arrow: string; text: string } {
+	if (trl == null) return { bg: "#f9fafb", border: "#e5e7eb", arrow: "#d1d5db", text: "#6b7280" }
+	if (trl >= 8) return { bg: "#f1f7ff", border: "#bfdbfe", arrow: "#93c5fd", text: "#1d4ed8" }
+	if (trl >= 6) return { bg: "#feffec", border: "#fde68a", arrow: "#fcd34d", text: "#92400e" }
+	return { bg: "#feeeee", border: "#fecaca", arrow: "#fca5a5", text: "#b91c1c" }
+}
+
+function TrlPipelineDiagram({ rows }: { rows: TrlRow[] }) {
+	if (rows.length === 0) return null
+	const mainRows = rows.length >= 4 ? rows.slice(0, rows.length - 1) : rows
+	const supportingRow = rows.length >= 4 ? rows[rows.length - 1] : null
+
+	return (
+		<div className="mb-4">
+			<p className="text-[11px] text-gray-400 mb-3">一本道と構成要素の位置</p>
+			<div className="overflow-x-auto pb-2">
+				<div className="flex items-start gap-0 min-w-max">
+					{mainRows.map((row, i) => {
+						const colors = trlNodeColors(row.trl)
+						return (
+							<div key={i} className="flex items-center gap-0">
+								<div className="flex flex-col items-center w-[148px]">
+									<p className="text-[10px] text-gray-400 mb-1.5 text-center leading-tight px-1">
+										{ORDINALS[i]}
+									</p>
+									<div className="w-full rounded-lg p-2.5" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}>
+										<p className="text-[11px] font-semibold text-gray-800 leading-tight mb-0.5 line-clamp-1">{row.name}</p>
+										{row.trl != null && (
+											<p className="text-[10px] mb-1.5" style={{ color: colors.text }}>
+												TRL {row.trl} – {row.interpretation}
+											</p>
+										)}
+										<p className="text-[10px] text-gray-500 leading-relaxed line-clamp-2">{row.explanation}</p>
+									</div>
+								</div>
+								{i < mainRows.length - 1 && (
+									<div className="flex items-center self-center mt-4 mx-1 flex-shrink-0">
+										<svg width="20" height="10" viewBox="0 0 20 10" fill="none">
+											<path d="M0 5H16M16 5L12 1M16 5L12 9" stroke={colors.arrow} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+										</svg>
+									</div>
+								)}
+							</div>
+						)
+					})}
+				</div>
+				{supportingRow && (() => {
+					const colors = trlNodeColors(supportingRow.trl)
+					return (
+						<div className="mt-3 inline-block">
+							<div className="rounded-lg p-2.5 max-w-[220px]" style={{ backgroundColor: colors.bg, border: `1px dashed ${colors.border}` }}>
+								<p className="text-[11px] font-semibold text-gray-800 leading-tight mb-0.5">{supportingRow.name}</p>
+								{supportingRow.trl != null && (
+									<p className="text-[10px] mb-1.5" style={{ color: colors.text }}>
+										TRL {supportingRow.trl} – {supportingRow.interpretation}
+									</p>
+								)}
+								<p className="text-[10px] text-gray-500 leading-relaxed line-clamp-2">{supportingRow.explanation}</p>
+							</div>
+						</div>
+					)
+				})()}
+			</div>
+		</div>
+	)
+}
+
 function TrlTabContent({
 	scenario,
 	selectedTech,
@@ -227,12 +312,26 @@ function TrlTabContent({
 		)
 	}
 
+	const summary = buildTrlSummary(rows)
+
 	return (
 		<div className="p-4">
 			{scenario.name && (
 				<h2 className="text-sm font-semibold text-gray-900 mb-1 leading-snug">{scenario.name}</h2>
 			)}
-			<p className="text-xs text-gray-400 mb-3">このシナリオを実現するためのコア技術とその成熟度を示しています。</p>
+			<p className="text-xs text-gray-400 mb-4">このシナリオを実現するためのコア技術とその成熟度を示しています。</p>
+
+			{/* Summary section */}
+			{summary && (
+				<div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
+					<p className="text-[11px] font-semibold text-gray-600 mb-1.5">TRL サマリー</p>
+					<p className="text-xs text-gray-600 leading-relaxed">{summary}</p>
+				</div>
+			)}
+
+			{/* Pipeline diagram */}
+			<TrlPipelineDiagram rows={rows} />
+
 			<div className="border border-gray-200 rounded-lg overflow-hidden">
 				<table className="w-full text-sm">
 					<thead>

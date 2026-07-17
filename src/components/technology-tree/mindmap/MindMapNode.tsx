@@ -4,10 +4,10 @@ const TRL_META: Record<number, { label: string; bg: string }> = {
 	1: { label: "基礎研究",   bg: "#feeeee" },
 	2: { label: "基礎研究",   bg: "#feeeee" },
 	3: { label: "基礎研究",   bg: "#feeeee" },
-	4: { label: "実証段階",   bg: "#feffec" },
-	5: { label: "実証段階",   bg: "#feffec" },
+	4: { label: "基礎研究",   bg: "#feeeee" },
+	5: { label: "基礎研究",   bg: "#feeeee" },
 	6: { label: "実証段階",   bg: "#feffec" },
-	7: { label: "商業化済み", bg: "#f1f7ff" },
+	7: { label: "実証段階",   bg: "#feffec" },
 	8: { label: "商業化済み", bg: "#f1f7ff" },
 	9: { label: "商業化済み", bg: "#f1f7ff" },
 }

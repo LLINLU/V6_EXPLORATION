@@ -34,7 +34,11 @@ const TOAST_IDS = {
 	REMOVE_STRENGTH_FAILED: "remove-strength-failed",
 } as const
 
-export const TreeGenerationSection = () => {
+type Props = {
+	onModeChange?: (mode: "tech" | "problem") => void
+}
+
+export const TreeGenerationSection = ({ onModeChange }: Props) => {
 	const navigate = useNavigate()
 	const { t } = useTranslation()
 
@@ -88,6 +92,7 @@ export const TreeGenerationSection = () => {
 		setIsDeepRefinerMode(false)
 		setIsRefinerExpanded(false)
 		setShowTreeFirst(false)
+		onModeChange?.(mode === "FAST" ? "problem" : "tech")
 	}
 
 	const handleSuggestionClick = (suggestion: string) => {

@@ -712,7 +712,7 @@ export default function V1ProblemFlow() {
 			{/* Back nav */}
 			<div className="bg-white border-b border-gray-100 px-6 py-2.5">
 				<button
-					onClick={() => navigate("/v1")}
+					onClick={() => navigate("/")}
 					className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors"
 				>
 					<ArrowLeft className="w-4 h-4" />
