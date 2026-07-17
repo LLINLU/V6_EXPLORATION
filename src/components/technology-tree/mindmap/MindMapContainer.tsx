@@ -77,6 +77,7 @@ interface MindMapContainerProps {
 	chatboxContent?: React.ReactNode
 	// Toolbar orientation
 	toolbarOrientation?: "vertical" | "horizontal"
+	hideTrlToggle?: boolean
 }
 
 const MindMapContainer: React.FC<MindMapContainerProps> = ({
@@ -106,6 +107,7 @@ const MindMapContainer: React.FC<MindMapContainerProps> = ({
 	chatboxContent,
 	treeMode,
 	toolbarOrientation = "vertical",
+	hideTrlToggle = false,
 }) => {
 	// Prepare data for context
 	const mindMapData: MindMapData = {
@@ -143,6 +145,7 @@ const MindMapContainer: React.FC<MindMapContainerProps> = ({
 				chatboxContent={chatboxContent}
 				toolbarOrientation={toolbarOrientation}
 				treeMode={treeMode}
+				hideTrlToggle={hideTrlToggle}
 			/>
 		</MindMapProvider>
 	)

@@ -58,6 +58,7 @@ interface MindMapRendererProps {
 	treeMode?: string
 	chatBoxOpen?: boolean
 	toolbarOrientation?: "vertical" | "horizontal"
+	hideTrlToggle?: boolean
 }
 
 export const MindMapRenderer: React.FC<MindMapRendererProps> = ({
@@ -69,6 +70,7 @@ export const MindMapRenderer: React.FC<MindMapRendererProps> = ({
 	chatBoxOpen,
 	toolbarOrientation = "vertical",
 	treeMode,
+	hideTrlToggle = false,
 }) => {
 	const { state, actions, data } = useMindMap()
 	const { addCustomNode } = useTreeDataStore()
@@ -216,7 +218,7 @@ export const MindMapRenderer: React.FC<MindMapRendererProps> = ({
 			</div>
 
 			{/* TRL colour toggle */}
-			{toolbarOrientation !== "horizontal" && (() => {
+			{!hideTrlToggle && toolbarOrientation !== "horizontal" && (() => {
 				const { trlColorMode, toggleTrlColorMode } = uiStore
 				return (
 					<button

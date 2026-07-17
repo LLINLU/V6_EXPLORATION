@@ -848,7 +848,7 @@ function renderRow({
 						type="button"
 						onClick={(e) => {
 							e.stopPropagation()
-							onOpenTrlModal(scenario)
+							onRowClickWithTab?.(scenario, "trl")
 						}}
 						className="cursor-pointer text-left"
 					>

@@ -172,7 +172,7 @@ export function ScenarioOverview({ scenarios }: { scenarios: Scenario[] }) {
       <div className="flex-shrink-0 px-4 pt-3 pb-3">
         <TooltipProvider>
           <div className="flex items-center gap-2 mb-3">
-            {(["ind", "tf", "kf"] as Axis[]).map((a) => (
+            {(["ind", "tf"] as Axis[]).map((a) => (
               <Tooltip key={a}>
                 <TooltipTrigger asChild>
                   <button

@@ -11,7 +11,31 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog"
 import type { Scenario } from "@/types/scenario"
-import { getTRLDescription, TRLIndicator } from "./TRLIndicator"
+import { getTRLDescription } from "./TRLIndicator"
+
+const TRL_SEGMENT_COLORS = ["#fecaca","#fed7aa","#fef08a","#d9f99d","#bbf7d0","#99f6e4","#a5f3fc","#bae6fd","#bfdbfe"]
+
+function TrlDots({ level }: { level: number }) {
+	return (
+		<div className="flex items-center gap-1">
+			{Array.from({ length: 9 }, (_, i) => {
+				const filled = i < level
+				return (
+					<div
+						key={i}
+						className="rounded-full shrink-0"
+						style={{
+							width: filled ? 10 : 7,
+							height: filled ? 10 : 7,
+							background: filled ? TRL_SEGMENT_COLORS[i] : "#e5e7eb",
+						}}
+					/>
+				)
+			})}
+			<span className="text-sm text-gray-400 ml-1 tabular-nums">{level}</span>
+		</div>
+	)
+}
 
 interface TRLModalProps {
 	open: boolean
@@ -32,7 +56,14 @@ export function TRLModal({ open, onOpenChange, scenario }: TRLModalProps) {
 			trlBreakdown,
 		})
 	}
-	// Use real data when available, otherwise show empty state
+	const DUMMY_TECHS = [
+		{ name: "コアアルゴリズム", explanation: "本シナリオの中心となる計算・推論アルゴリズム。精度と処理速度のトレードオフを最適化する。", trl: 5 },
+		{ name: "データ収集・前処理基盤", explanation: "学習・評価に必要なデータを収集し、ノイズ除去・正規化・ラベリングを行うパイプライン。", trl: 7 },
+		{ name: "統合インターフェース", explanation: "既存システムやワークフローへの接続を担うAPIおよびUI層。ユーザーの操作性を左右する。", trl: 6 },
+		{ name: "評価・検証フレームワーク", explanation: "実環境での性能を定量化するベンチマーク体系。規制要件への適合性確認にも用いる。", trl: 4 },
+	]
+
+	// Use real data when available, otherwise fall back to dummy for design exploration
 	const tableRows = hasMultiple
 		? technologiesTrl?.map((item) => {
 				const desc = getTRLDescription(item.trl.trl_score, t)
@@ -43,7 +74,15 @@ export function TRLModal({ open, onOpenChange, scenario }: TRLModalProps) {
 					interpretation: desc.title,
 				}
 			})
-		: []
+		: DUMMY_TECHS.map((item) => {
+				const desc = getTRLDescription(item.trl, t)
+				return {
+					name: item.name,
+					explanation: item.explanation,
+					trl: item.trl,
+					interpretation: desc.title,
+				}
+			})
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -59,7 +98,7 @@ export function TRLModal({ open, onOpenChange, scenario }: TRLModalProps) {
 						<p className="text-sm text-gray-500">
 							{t("scenario.trl_modal.no_scenario")}
 						</p>
-					) : tableRows.length === 0 && !trlBreakdown ? (
+					) : false ? (
 						<div className="flex flex-col items-center justify-center py-12 text-gray-500">
 							<p className="text-sm">{t("scenario.trl_modal.no_data")}</p>
 							<p className="text-xs mt-1 text-gray-400">
@@ -75,17 +114,14 @@ export function TRLModal({ open, onOpenChange, scenario }: TRLModalProps) {
 								<table className="w-full text-sm">
 									<thead>
 										<tr className="bg-gray-50 border-b border-gray-200">
-											<th className="text-left py-2.5 px-3 font-semibold text-gray-700 w-[22%]">
+											<th className="text-left py-2.5 px-3 font-semibold text-gray-700 w-[25%]">
 												{t("scenario.trl_modal.col_tech_name")}
 											</th>
-											<th className="text-left py-2.5 px-3 font-semibold text-gray-700 w-[33%]">
+											<th className="text-left py-2.5 px-3 font-semibold text-gray-700 w-[45%]">
 												{t("scenario.trl_modal.col_summary")}
 											</th>
-											<th className="text-left py-2.5 px-3 font-semibold text-gray-700 w-[10%]">
+											<th className="text-left py-2.5 px-3 font-semibold text-gray-700 w-[30%]">
 												TRL
-											</th>
-											<th className="text-left py-2.5 px-3 font-semibold text-gray-700 w-[35%]">
-												{t("scenario.trl_modal.col_interpretation")}
 											</th>
 										</tr>
 									</thead>
@@ -99,13 +135,10 @@ export function TRLModal({ open, onOpenChange, scenario }: TRLModalProps) {
 													{row.explanation || "—"}
 												</td>
 												<td className="py-2.5 px-3">
-													<div className="flex items-center gap-1.5">
-														<TRLIndicator level={row.trl} />
-														<span className="text-gray-700">{row.trl}</span>
-													</div>
-												</td>
-												<td className="py-2.5 px-3 text-gray-600">
-													{row.interpretation}
+													{row.trl != null && <TrlDots level={row.trl} />}
+													{row.interpretation && (
+														<div className="text-xs text-gray-500 mt-1">{row.interpretation}</div>
+													)}
 												</td>
 											</tr>
 										))}

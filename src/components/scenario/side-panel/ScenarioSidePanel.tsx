@@ -57,11 +57,221 @@ import type { NodePatent } from "@/stores/enrichedDataStore"
 import type { Scenario } from "@/types/scenario"
 import type { ThemeReportData } from "@/types/theme-report"
 import { exportToCsv } from "@/utils/csvExport"
+import { getTRLDescription } from "@/components/scenario/TRLIndicator"
+import { MindMapContainer } from "@/components/technology-tree/mindmap/MindMapContainer"
+import { useTreeUIStore } from "@/stores/treeUIStore"
 import { ImplementationTab } from "./tabs/ImplementationTab"
 import { OverviewTab } from "./tabs/OverviewTab"
 import { PaperTab } from "./tabs/PaperTab"
 import { PatentTab } from "./tabs/PatentTab"
 import { ReportTab } from "./tabs/ReportTab"
+
+const TRL_SEGMENT_COLORS = ["#fecaca","#fed7aa","#fef08a","#d9f99d","#bbf7d0","#99f6e4","#a5f3fc","#bae6fd","#bfdbfe"]
+
+function TrlDots({ level }: { level: number }) {
+	return (
+		<div className="flex items-center gap-1">
+			{Array.from({ length: 9 }, (_, i) => {
+				const filled = i < level
+				return (
+					<div key={i} className="rounded-full shrink-0" style={{ width: filled ? 10 : 7, height: filled ? 10 : 7, background: filled ? TRL_SEGMENT_COLORS[i] : "#e5e7eb" }} />
+				)
+			})}
+			<span className="text-sm text-gray-400 ml-1 tabular-nums">{level}</span>
+		</div>
+	)
+}
+
+const DUMMY_TECHS = [
+	{ name: "コアアルゴリズム", explanation: "本シナリオの中心となる計算・推論アルゴリズム。精度と処理速度のトレードオフを最適化する。", trl: 5 },
+	{ name: "データ収集・前処理基盤", explanation: "学習・評価に必要なデータを収集し、ノイズ除去・正規化・ラベリングを行うパイプライン。", trl: 7 },
+	{ name: "統合インターフェース", explanation: "既存システムやワークフローへの接続を担うAPIおよびUI層。ユーザーの操作性を左右する。", trl: 6 },
+	{ name: "評価・検証フレームワーク", explanation: "実環境での性能を定量化するベンチマーク体系。規制要件への適合性確認にも用いる。", trl: 4 },
+]
+
+const DUMMY_CHILDREN: Record<number, { name: string; trl: number }[]> = {
+	0: [
+		{ name: "確率的推論エンジン",   trl: 3 },
+		{ name: "特徴抽出モジュール",   trl: 5 },
+		{ name: "モデル最適化レイヤー", trl: 6 },
+		{ name: "推論高速化ランタイム", trl: 8 },
+	],
+	1: [
+		{ name: "データ収集API",      trl: 8 },
+		{ name: "前処理パイプライン",  trl: 7 },
+		{ name: "アノテーション基盤",  trl: 5 },
+		{ name: "品質検証システム",    trl: 4 },
+	],
+	2: [
+		{ name: "REST APIゲートウェイ", trl: 8 },
+		{ name: "UIコンポーネント層",   trl: 7 },
+		{ name: "認証・認可基盤",       trl: 6 },
+		{ name: "外部連携アダプター",   trl: 5 },
+	],
+	3: [
+		{ name: "ベンチマーク実行環境",   trl: 4 },
+		{ name: "性能計測フレームワーク", trl: 5 },
+		{ name: "規制適合チェッカー",     trl: 3 },
+		{ name: "レポート自動生成",       trl: 6 },
+	],
+}
+
+const EMPTY_LEVEL: Record<string, import("@/types/tree").TreeNode[]> = {}
+
+function DummyMindmap({ rootName }: { rootName: string }) {
+	const [isFullscreen, setIsFullscreen] = useState(false)
+	const key = (rootName.length % 4) as 0 | 1 | 2 | 3
+	const children = DUMMY_CHILDREN[key]
+	const level1Items = children.map((c, i) => ({ id: `trl-c${i}`, name: c.name, trl: c.trl, children_count: 0 }))
+	const allIds = new Set(["root", ...level1Items.map((n) => n.id)])
+	const levelNames = {
+		level1: "構成技術1",
+		level2: "構成技術2",
+		level3: "構成技術3",
+		level4: "構成技術4",
+		level5: "構成技術5",
+	}
+	return (
+		<div className={isFullscreen ? "fixed inset-0 z-50 bg-white" : "w-full h-[420px] relative"}>
+			<MindMapContainer
+				selectedPath={{}}
+				query={rootName}
+				level1Items={level1Items}
+				level2Items={EMPTY_LEVEL}
+				level3Items={EMPTY_LEVEL}
+				level4Items={EMPTY_LEVEL}
+				level5Items={EMPTY_LEVEL}
+				level6Items={EMPTY_LEVEL}
+				level7Items={EMPTY_LEVEL}
+				level8Items={EMPTY_LEVEL}
+				level9Items={EMPTY_LEVEL}
+				level10Items={EMPTY_LEVEL}
+				levelNames={levelNames}
+				treeMode="FAST"
+				onNodeClick={() => {}}
+				toolbarOrientation="vertical"
+				hideTrlToggle={true}
+				isFullscreen={isFullscreen}
+				onToggleFullscreen={() => setIsFullscreen((v) => !v)}
+				getMindmapExpansionState={() => allIds}
+			/>
+		</div>
+	)
+}
+
+type TrlRow = { name: string; explanation: string; trl: number | null; interpretation: string }
+
+function TrlTabContent({
+	scenario,
+	selectedTech,
+	setSelectedTech,
+}: {
+	scenario: Scenario | null
+	selectedTech: TrlRow | null
+	setSelectedTech: (row: TrlRow | null) => void
+}) {
+	const { t } = useTranslation()
+	const trlColorMode = useTreeUIStore((s) => s.trlColorMode)
+	const toggleTrlColorMode = useTreeUIStore((s) => s.toggleTrlColorMode)
+
+	if (!scenario) return null
+	const technologiesTrl = scenario.metrics?.technologiesTrl
+	const hasReal = technologiesTrl && technologiesTrl.length > 0
+	const rows: TrlRow[] = hasReal
+		? technologiesTrl.map((item) => ({
+				name: item.name,
+				explanation: item.description,
+				trl: item.trl.trl_score,
+				interpretation: getTRLDescription(item.trl.trl_score, t).title,
+			}))
+		: DUMMY_TECHS.map((item) => ({
+				name: item.name,
+				explanation: item.explanation,
+				trl: item.trl,
+				interpretation: getTRLDescription(item.trl, t).title,
+			}))
+
+	if (selectedTech) {
+		return (
+			<div className="p-4">
+				<div className="flex items-center gap-2 mb-1">
+					<button
+						type="button"
+						onClick={() => setSelectedTech(null)}
+						className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+					>
+						<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path d="M11 7H3M3 7L7 3M3 7L7 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+						</svg>
+					</button>
+					<h2 className="text-sm font-semibold text-gray-900 leading-snug flex-1">{selectedTech.name}</h2>
+					<button
+						type="button"
+						onClick={toggleTrlColorMode}
+						className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 flex-shrink-0"
+					>
+						<span className="text-[11px] text-gray-500">TRL</span>
+						<span
+							className="relative inline-flex h-4 w-7 shrink-0 rounded-full transition-colors duration-200"
+							style={{ background: trlColorMode ? "#b29dc4" : "#d1d5db" }}
+						>
+							<span
+								className={`absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-transform duration-200 ${trlColorMode ? "translate-x-3.5" : "translate-x-0.5"}`}
+							/>
+						</span>
+					</button>
+				</div>
+				<p className="text-xs text-gray-400 mb-4 ml-6">構成技術ツリー</p>
+				<DummyMindmap rootName={selectedTech.name} />
+			</div>
+		)
+	}
+
+	return (
+		<div className="p-4">
+			{scenario.name && (
+				<h2 className="text-sm font-semibold text-gray-900 mb-1 leading-snug">{scenario.name}</h2>
+			)}
+			<p className="text-xs text-gray-400 mb-3">このシナリオを実現するためのコア技術とその成熟度を示しています。</p>
+			<div className="border border-gray-200 rounded-lg overflow-hidden">
+				<table className="w-full text-sm">
+					<thead>
+						<tr className="bg-gray-50 border-b border-gray-200">
+							<th className="text-left py-2.5 px-3 font-normal text-gray-700 text-[12px] w-[25%]">技術名</th>
+							<th className="text-left py-2.5 px-3 font-normal text-gray-700 text-[12px] w-[37%]">概要</th>
+							<th className="text-left py-2.5 px-3 font-normal text-gray-700 text-[12px] w-[28%]">TRL</th>
+							<th className="text-left py-2.5 px-3 font-normal text-gray-700 text-[12px] w-[10%]">ツリー</th>
+						</tr>
+					</thead>
+					<tbody className="divide-y divide-gray-200">
+						{rows.map((row, idx) => (
+							<tr key={idx} className="bg-white">
+								<td className="py-2.5 px-3 text-gray-600 text-xs">{row.name}</td>
+								<td className="py-2.5 px-3 text-gray-600 text-xs">{row.explanation || "—"}</td>
+								<td className="py-2.5 px-3">
+									{row.trl != null && <TrlDots level={row.trl} />}
+									{row.interpretation && <div className="text-xs text-gray-500 mt-1">{row.interpretation}</div>}
+								</td>
+								<td className="py-2.5 px-3">
+									<button
+										type="button"
+										onClick={() => setSelectedTech(row)}
+										className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+										title="ツリーマップを表示"
+									>
+										<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+											<path d="M3 11L11 3M11 3H5M11 3V9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+										</svg>
+									</button>
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	)
+}
 
 function getReportStyles(): string {
 	return Array.from(document.styleSheets)
@@ -363,12 +573,18 @@ export const ScenarioPaperPanel = ({
 
 	// ── Tab state ──────────────────────────────────────────────────────────────
 	const [activeTab, setActiveTab] = useState("overview")
+	const selectedTrlTech = useTreeUIStore((s) => s.selectedTrlTech)
+	const setSelectedTrlTech = useTreeUIStore((s) => s.setSelectedTrlTech)
 
 	useEffect(() => {
 		if (externalActiveTab && externalActiveTab !== activeTab) {
 			setActiveTab(externalActiveTab)
 		}
 	}, [externalActiveTab, activeTab])
+
+	useEffect(() => {
+		setSelectedTrlTech(null)
+	}, [scenario?.id, setSelectedTrlTech])
 
 	// ── Google Translate ───────────────────────────────────────────────────────
 	useEffect(() => {
@@ -1166,6 +1382,7 @@ export const ScenarioPaperPanel = ({
 						loadingPatents={shouldShowPatentsLoading}
 						loadingUseCases={shouldShowUseCasesLoading}
 						showSummaryTab={true}
+						showTrlTab={true}
 					/>
 				</div>
 
@@ -1265,7 +1482,8 @@ export const ScenarioPaperPanel = ({
 			{/* ── Filter / search bar (papers / patents / implementation only) ── */}
 			{activeTab !== "summary" &&
 				activeTab !== "overview" &&
-				activeTab !== "techseeds" && (
+				activeTab !== "techseeds" &&
+				activeTab !== "trl" && (
 					<div className="flex-shrink-0 px-4 pt-3">
 						<div className="flex items-center mb-2">
 							<div ref={searchControlRef} className="flex items-center gap-2">
@@ -1408,6 +1626,14 @@ export const ScenarioPaperPanel = ({
 						scenarioId={scenario.id}
 						onReload={fetchUseCasesFromEdge}
 						onToggleCase={handleToggleCase}
+					/>
+				)}
+
+				{activeTab === "trl" && (
+					<TrlTabContent
+						scenario={scenario}
+						selectedTech={selectedTrlTech}
+						setSelectedTech={setSelectedTrlTech}
 					/>
 				)}
 

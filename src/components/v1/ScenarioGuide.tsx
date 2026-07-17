@@ -45,7 +45,6 @@ function fmtTam(v: number) {
 
 const STEPS = [
   { key: "market", label: "市場" },
-  { key: "tech", label: "技術レイヤー" },
   { key: "attract", label: "魅力度" },
   { key: "timing", label: "タイミング" },
   { key: "result", label: "有望シナリオ" },
@@ -145,61 +144,7 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
     </>
   )
 
-  // ── Step 2: Tech Layer ──
-  const StepTech = () => {
-    const allOn = selectedTechLayers.size === 0
-    return (
-      <>
-        <div className="text-base font-bold mb-1">技術レイヤーで絞りますか？</div>
-        <div className="text-xs text-gray-500 leading-relaxed mb-4">
-          自社が関われるレイヤーで絞り込めます。こだわりがなければ「すべて」のまま次へ。
-        </div>
-        <div className="flex flex-wrap gap-2 mb-1">
-          {allTechLayers.map((kf) => {
-            const count = afterMarket.filter((s) => KF[s.id] === kf).length
-            const on = allOn || selectedTechLayers.has(kf)
-            return (
-              <button
-                key={kf}
-                onClick={() => {
-                  if (allOn) {
-                    setSelectedTechLayers(new Set(allTechLayers.filter((t) => t !== kf)))
-                  } else {
-                    const next = toggleSet(selectedTechLayers, kf)
-                    setSelectedTechLayers(next.size === allTechLayers.length ? new Set() : next)
-                  }
-                }}
-                className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors ${
-                  on
-                    ? "border-blue-500 bg-blue-50 text-blue-700 font-semibold"
-                    : "border-gray-200 bg-white text-gray-400 hover:border-gray-300"
-                }`}
-              >
-                {kf}
-                <span className={`text-[10px] ${on ? "text-blue-400" : "text-gray-300"}`}>{count}</span>
-              </button>
-            )
-          })}
-        </div>
-        {!allOn && (
-          <button onClick={() => setSelectedTechLayers(new Set())} className="text-xs text-blue-500 underline mt-2 mb-2">
-            すべて選択
-          </button>
-        )}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-3">
-          <button onClick={() => setStep(0)} className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-md hover:border-gray-300 transition-colors">
-            ← 戻る
-          </button>
-          <span className="text-xs text-gray-500"><b className="text-gray-800">{afterTech.length}</b>件が対象</span>
-          <button onClick={() => setStep(2)} className="bg-blue-600 text-white text-xs font-semibold px-4 py-1.5 rounded-md hover:bg-blue-700 transition-colors">
-            次へ →
-          </button>
-        </div>
-      </>
-    )
-  }
-
-  // ── Step 3: Attractiveness ──
+  // ── Step 2: Attractiveness ──
   const StepAttract = () => {
     const pool = [...afterTech].sort((a, b) =>
       attractSort === "tam"
@@ -261,12 +206,12 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
           })}
         </div>
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-          <button onClick={() => setStep(1)} className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-md hover:border-gray-300 transition-colors">
+          <button onClick={() => setStep(0)} className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-md hover:border-gray-300 transition-colors">
             ← 戻る
           </button>
           <span className="text-xs text-gray-500"><b className="text-gray-800">{selectedAttract.size}</b> 件選択</span>
           <button
-            onClick={() => setStep(3)}
+            onClick={() => setStep(2)}
             disabled={selectedAttract.size === 0}
             className="bg-blue-600 disabled:opacity-30 text-white text-xs font-semibold px-4 py-1.5 rounded-md hover:bg-blue-700 disabled:hover:bg-blue-600 transition-colors"
           >
@@ -291,17 +236,17 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
         <div className="text-xs text-gray-500 leading-relaxed mb-3">
           論文の伸びは基礎研究の勢い、特許の伸びは実用化の勢いを表します。「成長期」が参入好機です。
         </div>
-        <div className="grid grid-cols-2 gap-1.5 mb-3">
+        <div className="flex flex-wrap gap-1.5 mb-3">
           {[
             { label: "成長期", sub: "論文↑・特許↑ 参入好機", bg: "bg-emerald-50", text: "text-emerald-700" },
             { label: "黎明期", sub: "論文↑・特許→ 先行仕込み", bg: "bg-purple-50", text: "text-purple-700" },
             { label: "成熟期", sub: "論文→・特許↑ 後発注意", bg: "bg-amber-50", text: "text-amber-700" },
             { label: "衰退期", sub: "論文↓・特許↓ 見極め", bg: "bg-red-50", text: "text-red-700" },
           ].map((t) => (
-            <div key={t.label} className={`${t.bg} ${t.text} rounded-md p-2`}>
-              <div className="font-bold text-xs">{t.label}</div>
-              <div className="text-[10px] opacity-80">{t.sub}</div>
-            </div>
+            <span key={t.label} className={`${t.bg} ${t.text} rounded-full px-2.5 py-1 text-[11px] font-medium whitespace-nowrap`}>
+              {t.label}
+              <span className="font-normal opacity-70 ml-1">{t.sub}</span>
+            </span>
           ))}
         </div>
         <div className="flex flex-col gap-2 mb-3">
@@ -336,12 +281,12 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
           })}
         </div>
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-          <button onClick={() => setStep(2)} className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-md hover:border-gray-300 transition-colors">
+          <button onClick={() => setStep(1)} className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-md hover:border-gray-300 transition-colors">
             ← 戻る
           </button>
           <span className="text-xs text-gray-500"><b className="text-gray-800">{selectedTiming.size}</b> 件選択</span>
           <button
-            onClick={() => setStep(4)}
+            onClick={() => setStep(3)}
             disabled={selectedTiming.size === 0}
             className="bg-blue-600 disabled:opacity-30 text-white text-xs font-semibold px-4 py-1.5 rounded-md hover:bg-blue-700 disabled:hover:bg-blue-600 transition-colors"
           >
@@ -355,7 +300,6 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
   // ── Step 5: Result ──
   const StepResult = () => (
     <>
-      <div className="text-[11px] font-semibold text-blue-600 tracking-wider mb-1">✓ 有望シナリオ</div>
       <div className="text-base font-bold mb-3">{finalScenarios.length}件の有望シナリオが特定されました</div>
       <div className="border-l-2 border-blue-500 bg-gray-50 rounded-r-md pl-3 pr-3 py-2.5 mb-4 text-xs text-gray-600 leading-relaxed">
         {selectedMarkets.size > 0 ? [...selectedMarkets].join("・") : "全市場"}を対象に、
@@ -382,7 +326,7 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
         })}
       </div>
       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-        <button onClick={() => setStep(3)} className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-md hover:border-gray-300 transition-colors">
+        <button onClick={() => setStep(2)} className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-md hover:border-gray-300 transition-colors">
           ← 戻る
         </button>
         <button
@@ -401,7 +345,7 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
     </>
   )
 
-  const stepContent = [<StepMarket />, <StepTech />, <StepAttract />, <StepTiming />, <StepResult />]
+  const stepContent = [<StepMarket />, <StepAttract />, <StepTiming />, <StepResult />]
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">

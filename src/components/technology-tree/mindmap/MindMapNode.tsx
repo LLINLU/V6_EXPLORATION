@@ -307,11 +307,13 @@ export const MindMapNodeComponent: React.FC<MindMapNodeProps> = ({
 					</div>
 
 					{/* TRL badge */}
-					{!nodeFlags.isRoot && trlColorMode && node.trl !== undefined && (() => {
+					{!nodeFlags.isRoot && node.trl !== undefined && (() => {
 						const { label, bg } = getTrlMeta(node.trl)
+						const badgeBg = trlColorMode ? bg : "transparent"
+						const badgeColor = trlColorMode ? "text-gray-700" : "text-gray-500"
 						return (
 							<div className="flex justify-center mt-1">
-								<span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium text-gray-700" style={{ background: bg }}>
+								<span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${badgeColor}`} style={{ background: badgeBg }}>
 									TRL {node.trl} · {label}
 								</span>
 							</div>
