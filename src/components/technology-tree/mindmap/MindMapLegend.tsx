@@ -16,9 +16,9 @@ import {
 import { useTreeUIStore } from "@/stores/treeUIStore"
 
 const TRL_LEGEND = [
-	{ trl: "1–3", label: "基礎研究",   bg: "#feeeee" },
-	{ trl: "4–6", label: "実証段階",   bg: "#feffec" },
-	{ trl: "7–9", label: "商業化済み", bg: "#f1f7ff" },
+	{ trl: "1–5", label: "基礎研究",   bg: "#feeeee" },
+	{ trl: "6–7", label: "実証段階",   bg: "#feffec" },
+	{ trl: "8–9", label: "商業化済み", bg: "#f1f7ff" },
 ]
 
 interface MindMapLegendProps {
