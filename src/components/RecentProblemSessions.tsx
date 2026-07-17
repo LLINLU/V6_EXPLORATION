@@ -1,7 +1,13 @@
 "use client"
 
 import { Clock } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
 type ProblemSession = {
@@ -25,14 +31,16 @@ const STEP_COLORS: Record<number, string> = {
 const DUMMY_SESSIONS: ProblemSession[] = [
 	{
 		id: "p1",
-		theme: "猛暑による外出抑制が高齢者・子育て世帯の社会参加を減らし、地域コミュニティの希薄化を引き起こしている",
+		theme:
+			"猛暑による外出抑制が高齢者・子育て世帯の社会参加を減らし、地域コミュニティの希薄化を引き起こしている",
 		date: "7月17日 10:34",
 		stepNumber: 1,
 		nextStep: "問題文を固める",
 	},
 	{
 		id: "p2",
-		theme: "2035年、水ストレス地域におけるデータセンター冷却水の急増と地域水資源への影響",
+		theme:
+			"2035年、水ストレス地域におけるデータセンター冷却水の急増と地域水資源への影響",
 		date: "7月16日 21:22",
 		stepNumber: 2,
 		nextStep: "全体像を調べる",
@@ -53,7 +61,8 @@ const DUMMY_SESSIONS: ProblemSession[] = [
 	},
 	{
 		id: "p5",
-		theme: "物流業界の2024年問題と都市部ラストマイル配送の効率化・労働力不足の深刻化",
+		theme:
+			"物流業界の2024年問題と都市部ラストマイル配送の効率化・労働力不足の深刻化",
 		date: "7月13日 16:20",
 		stepNumber: 5,
 		nextStep: "解決アプローチ",
@@ -82,10 +91,14 @@ export const RecentProblemSessions = () => {
 						<div
 							key={session.id}
 							className="group flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors cursor-pointer"
-							onClick={() => {/* resume flow */}}
+							onClick={() => {
+								/* resume flow */
+							}}
 						>
 							<div className="flex-1 space-y-1 min-w-0">
-								<h4 className="font-medium text-sm leading-snug line-clamp-2 group-hover:line-clamp-none">{session.theme}</h4>
+								<h4 className="font-medium text-sm leading-snug line-clamp-2 group-hover:line-clamp-none">
+									{session.theme}
+								</h4>
 								<div className="flex items-center gap-3 text-xs text-gray-500">
 									<div className="flex items-center gap-1 shrink-0">
 										<Clock className="h-3 w-3" />
@@ -94,7 +107,8 @@ export const RecentProblemSessions = () => {
 									<span
 										className={cn(
 											"px-2.5 py-0.5 rounded-full text-[0.72rem] font-medium whitespace-nowrap shrink-0",
-											STEP_COLORS[session.stepNumber] ?? "bg-violet-50 text-violet-600",
+											STEP_COLORS[session.stepNumber] ??
+												"bg-violet-50 text-violet-600",
 										)}
 									>
 										次：{session.nextStep}
