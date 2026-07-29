@@ -1,5 +1,5 @@
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ScenarioSelectionMainLayout } from "@/components/scenario-selection/ScenarioSelectionMainLayout"
 import type { Scenario } from "@/types/scenario"
 
@@ -53,6 +53,7 @@ const STEPS = [
   { key: "market", label: "市場" },
   { key: "attract", label: "魅力度" },
   { key: "timing", label: "タイミング" },
+  { key: "techLayer", label: "技術レイヤー" },
   { key: "result", label: "有望シナリオ" },
 ]
 
@@ -88,20 +89,27 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
   const [selectedTechLayers, setSelectedTechLayers] = useState<Set<string>>(new Set())
   const [selectedAttract, setSelectedAttract] = useState<Set<string>>(new Set())
   const [selectedTiming, setSelectedTiming] = useState<Set<string>>(new Set())
+  const [techLayersGenerated, setTechLayersGenerated] = useState(false)
   const [attractSort, setAttractSort] = useState<"cagr" | "tam">("cagr")
-  const [resultView, setResultView] = useState<"card" | "table">("card")
+  const [resultView, setResultView] = useState<"card" | "table">("table")
 
   const allIndustries = Array.from(new Set(scenarios.map((s) => IND[s.id]).filter(Boolean)))
   const allTechLayers = Array.from(new Set(scenarios.map((s) => KF[s.id]).filter(Boolean)))
 
+  // Skipping a step means "nothing narrowed" — the whole incoming pool carries forward.
   const afterMarket = scenarios.filter(
     (s) => selectedMarkets.size === 0 || selectedMarkets.has(IND[s.id])
   )
-  const afterTech = afterMarket.filter(
-    (s) => selectedTechLayers.size === 0 || selectedTechLayers.has(KF[s.id])
-  )
-  const timingPool = scenarios.filter((s) => selectedAttract.has(s.id))
-  const finalScenarios = scenarios.filter((s) => selectedTiming.has(s.id))
+  const timingPool = selectedAttract.size === 0 ? afterMarket : afterMarket.filter((s) => selectedAttract.has(s.id))
+  const afterTiming = selectedTiming.size === 0 ? timingPool : timingPool.filter((s) => selectedTiming.has(s.id))
+  const finalScenarios = selectedTechLayers.size === 0 ? afterTiming : afterTiming.filter((s) => selectedTechLayers.has(KF[s.id]))
+
+  // Changing an upstream filter (market/attract/timing) changes which scenarios feed the
+  // tech-layer classification, so any previously generated layers are now stale.
+  useEffect(() => {
+    setTechLayersGenerated(false)
+    setSelectedTechLayers(new Set())
+  }, [selectedMarkets, selectedAttract, selectedTiming])
 
   function toggleSet<T>(prev: Set<T>, val: T): Set<T> {
     const next = new Set(prev)
@@ -153,11 +161,14 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
 
   // ── Step 2: Attractiveness ──
   const StepAttract = () => {
-    const pool = [...afterTech].sort((a, b) =>
+    const pool = [...afterMarket].sort((a, b) =>
       attractSort === "tam"
         ? (b.metrics?.tam ?? 0) - (a.metrics?.tam ?? 0)
         : (b.metrics?.cagr ?? 0) - (a.metrics?.cagr ?? 0)
     )
+    const toggleAttract = (id: string) => {
+      setSelectedAttract(toggleSet(selectedAttract, id))
+    }
     return (
       <>
         <div className="text-base font-bold mb-1">賭ける価値のあるシナリオは？</div>
@@ -188,7 +199,7 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
             return (
               <div
                 key={s.id}
-                onClick={() => setSelectedAttract(toggleSet(selectedAttract, s.id))}
+                onClick={() => toggleAttract(s.id)}
                 className={`grid gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
                   on ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
@@ -216,11 +227,16 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
           <button onClick={() => setStep(0)} className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-md hover:border-gray-300 transition-colors">
             ← 戻る
           </button>
-          <span className="text-xs text-gray-500"><b className="text-gray-800">{selectedAttract.size}</b> 件選択</span>
+          <span className="text-xs text-gray-500">
+            {selectedAttract.size > 0 ? (
+              <><b className="text-gray-800">{selectedAttract.size}</b> 件選択</>
+            ) : (
+              `すべて対象（${pool.length}件）`
+            )}
+          </span>
           <button
             onClick={() => setStep(2)}
-            disabled={selectedAttract.size === 0}
-            className="bg-blue-600 disabled:opacity-30 text-white text-xs font-semibold px-4 py-1.5 rounded-md hover:bg-blue-700 disabled:hover:bg-blue-600 transition-colors"
+            className="bg-blue-600 text-white text-xs font-semibold px-4 py-1.5 rounded-md hover:bg-blue-700 transition-colors"
           >
             次へ →
           </button>
@@ -237,6 +253,9 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
       const tb = getTimingInfo(b.metrics?.papers?.cagr ?? 0, b.metrics?.patents?.cagr ?? 0)
       return ORDER[ta.key] - ORDER[tb.key]
     })
+    const toggleTiming = (id: string) => {
+      setSelectedTiming(toggleSet(selectedTiming, id))
+    }
     return (
       <>
         <div className="text-base font-bold mb-1">今が参入すべきタイミングは？</div>
@@ -263,7 +282,7 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
             return (
               <div
                 key={s.id}
-                onClick={() => setSelectedTiming(toggleSet(selectedTiming, s.id))}
+                onClick={() => toggleTiming(s.id)}
                 className={`grid gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
                   on ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
@@ -288,16 +307,145 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
           <button onClick={() => setStep(1)} className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-md hover:border-gray-300 transition-colors">
             ← 戻る
           </button>
-          <span className="text-xs text-gray-500"><b className="text-gray-800">{selectedTiming.size}</b> 件選択</span>
+          <span className="text-xs text-gray-500">
+            {selectedTiming.size > 0 ? (
+              <><b className="text-gray-800">{selectedTiming.size}</b> 件選択</>
+            ) : (
+              `すべて対象（${sorted.length}件）`
+            )}
+          </span>
           <button
             onClick={() => setStep(3)}
-            disabled={selectedTiming.size === 0}
-            className="bg-blue-600 disabled:opacity-30 text-white text-xs font-semibold px-4 py-1.5 rounded-md hover:bg-blue-700 disabled:hover:bg-blue-600 transition-colors"
+            className="bg-blue-600 text-white text-xs font-semibold px-4 py-1.5 rounded-md hover:bg-blue-700 transition-colors"
           >
-            結果を見る →
+            次へ →
           </button>
         </div>
       </>
+    )
+  }
+
+  // ── Step 4: Tech Layer ──
+  const StepTechLayer = () => {
+    const [generating, setGenerating] = useState(false)
+    const generated = techLayersGenerated
+    const [progressIndex, setProgressIndex] = useState(-1)
+
+    const toggleTechLayer = (kf: string) => {
+      setSelectedTechLayers(toggleSet(selectedTechLayers, kf))
+    }
+
+    const runGenerate = () => {
+      setGenerating(true)
+      const total = afterTiming.length
+      const stepDelay = total > 0 ? 30000 / total : 30000
+      let i = 0
+      const advance = () => {
+        if (i >= total) {
+          setGenerating(false)
+          setTechLayersGenerated(true)
+          setProgressIndex(-1)
+          return
+        }
+        setProgressIndex(i)
+        i += 1
+        setTimeout(advance, stepDelay)
+      }
+      advance()
+    }
+
+    return (
+    <>
+      <div className="text-base font-bold mb-1">どの技術レイヤーに関心がありますか？</div>
+      <div className="text-xs text-gray-400 mb-2">任意のステップです。不要ならスキップして構いません</div>
+      <div className="text-xs text-gray-500 leading-relaxed mb-4">
+        技術レイヤーは、選択した各シナリオの「コア技術」を構成技術に分解し、その分解結果をもとに分類したものです。狙いたいレイヤーに絞り込むことで、関心のある技術領域のシナリオだけに集中できます。
+        分類には各シナリオのコア技術のファストツリーを個別に生成してから判定する必要があるため、少し時間がかかります。
+      </div>
+
+      {!generated && !generating && (
+        <div className="mb-4">
+          <button
+            onClick={runGenerate}
+            className="inline-flex items-center gap-2 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-normal px-4 py-2 rounded-md transition-colors"
+          >
+            技術レイヤーを生成する
+          </button>
+        </div>
+      )}
+
+      {generating && (
+        <div className="mb-4 border border-gray-200 rounded-lg overflow-hidden">
+          <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+            <div className="text-xs font-semibold text-gray-700">技術レイヤーを生成しています（約10分）</div>
+            <div className="text-[11px] text-gray-500 mt-0.5 leading-relaxed">
+              生成が終わるまでお待ちいただく必要はありません。その間、他のタブ（概観・シナリオ一覧など）で各シナリオの詳細をご確認いただけます。
+            </div>
+          </div>
+          <div className="divide-y divide-gray-100 max-h-56 overflow-y-auto">
+            {afterTiming.map((s, i) => {
+              const state = i < progressIndex ? "done" : i === progressIndex ? "running" : "pending"
+              return (
+                <div
+                  key={s.id}
+                  className={`flex items-center gap-2.5 px-4 py-2 text-xs ${state === "pending" ? "text-gray-400" : "text-gray-700"}`}
+                >
+                  <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
+                    {state === "done" && <span className="text-green-600">✓</span>}
+                    {state === "running" && (
+                      <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    )}
+                    {state === "pending" && <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />}
+                  </span>
+                  <span className="flex-1 truncate">
+                    {s.name} — コア技術を構成技術に分解{state === "done" ? "しました" : "中…"}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {generated && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {allTechLayers.map((kf) => {
+            const count = afterTiming.filter((s) => KF[s.id] === kf).length
+            const on = selectedTechLayers.has(kf)
+            return (
+              <button
+                key={kf}
+                onClick={() => toggleTechLayer(kf)}
+                className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                  on
+                    ? "border-blue-500 bg-blue-50 text-blue-700 font-normal"
+                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                }`}
+              >
+                {kf}
+                <span className={`text-[10px] ${on ? "text-blue-400" : "text-gray-400"}`}>{count}</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+        <button onClick={() => setStep(2)} className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-md hover:border-gray-300 transition-colors">
+          ← 戻る
+        </button>
+        <span className="text-xs text-gray-500">
+          {selectedTechLayers.size > 0 ? (
+            <><b className="text-gray-800">{selectedTechLayers.size}</b> レイヤーを選択（{finalScenarios.length}件）</>
+          ) : (
+            `全レイヤーが対象（${afterTiming.length}件）`
+          )}
+        </span>
+        <button onClick={() => setStep(4)} className="bg-blue-600 text-white text-xs font-semibold px-4 py-1.5 rounded-md hover:bg-blue-700 transition-colors">
+          結果を見る →
+        </button>
+      </div>
+    </>
     )
   }
 
@@ -307,8 +455,8 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
       <div className="text-base font-bold mb-3">{finalScenarios.length}件の有望シナリオが特定されました</div>
       <div className="border-l-2 border-blue-500 bg-gray-50 rounded-r-md pl-3 pr-3 py-2.5 mb-4 text-xs text-gray-600 leading-relaxed">
         {selectedMarkets.size > 0 ? [...selectedMarkets].join("・") : "全市場"}を対象に、
-        市場規模と成長率の観点から{selectedAttract.size}件を選定。
-        参入タイミングを評価し、{finalScenarios.length}件の有望シナリオを特定しました。
+        市場規模と成長率の観点から{timingPool.length}件を選定。
+        参入タイミングと技術レイヤーを評価し、{finalScenarios.length}件の有望シナリオを特定しました。
       </div>
 
       <div className="border-t border-gray-200 mb-4 -mx-4" />
@@ -361,7 +509,7 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
       )}
 
       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-        <button onClick={() => setStep(2)} className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-md hover:border-gray-300 transition-colors">
+        <button onClick={() => setStep(3)} className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-md hover:border-gray-300 transition-colors">
           ← 戻る
         </button>
         <button
@@ -371,6 +519,7 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
             setSelectedTechLayers(new Set())
             setSelectedAttract(new Set())
             setSelectedTiming(new Set())
+            setTechLayersGenerated(false)
           }}
           className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-md hover:border-gray-300 transition-colors"
         >
@@ -380,26 +529,26 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
     </>
   )
 
-  const stepContent = [<StepMarket />, <StepAttract />, <StepTiming />, <StepResult />]
+  const stepContent = [<StepMarket />, <StepAttract />, <StepTiming />, <StepTechLayer />, <StepResult />]
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       <div className="flex-1 min-h-0 overflow-y-auto p-4">
         {/* Stepper */}
-        <div className="flex items-center mb-4">
+        <div className="flex items-center mb-3">
           {STEPS.map((s, i) => (
             <div key={s.key} className="flex items-center">
               {/* Circle + label */}
               <div
-                className={`flex items-center gap-2 ${i < step ? "cursor-pointer" : "cursor-default"}`}
-                onClick={() => i < step && setStep(i)}
+                className="flex items-center gap-2 cursor-pointer group"
+                onClick={() => setStep(i)}
               >
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 transition-colors ${
                   i === step
                     ? "bg-blue-600 text-white"
                     : i < step
                     ? "bg-blue-600 text-white"
-                    : "border border-gray-300 text-gray-400"
+                    : "border border-gray-300 text-gray-400 group-hover:border-gray-400 group-hover:text-gray-500"
                 }`}>
                   {i + 1}
                 </div>
@@ -408,7 +557,7 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
                     ? "text-blue-600 font-medium"
                     : i < step
                     ? "text-blue-500"
-                    : "text-gray-400"
+                    : "text-gray-400 group-hover:text-gray-500"
                 }`}>
                   {s.label}
                 </span>
@@ -419,6 +568,12 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
               )}
             </div>
           ))}
+        </div>
+        <div className="text-xs text-gray-500 mb-1">
+          各ステップの条件でシナリオを絞り込み、最終的に有望なシナリオを特定します。
+        </div>
+        <div className="text-[11px] text-gray-400 mb-4">
+          すべてのステップは任意です。ステップ番号をクリックすると直接移動できます。
         </div>
 
         {/* Step card */}

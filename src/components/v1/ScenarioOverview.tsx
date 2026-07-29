@@ -33,24 +33,6 @@ const KF: Record<string, string> = {
   s7: "アルゴリズム",
 }
 
-const TRL_COLORS = ["#fecaca","#fed7aa","#fef08a","#d9f99d","#bbf7d0","#99f6e4","#a5f3fc","#bae6fd","#bfdbfe"]
-
-function TrlMiniBar({ trl }: { trl: number }) {
-  const filled = Math.min(Math.max(Math.round(trl), 0), 9)
-  return (
-    <div className="flex items-center gap-0.5 flex-1">
-      {Array.from({ length: 9 }, (_, i) => (
-        <div
-          key={i}
-          className="h-2 rounded-sm flex-1 flex-shrink-0"
-          style={{ background: i < filled ? TRL_COLORS[i] : "#e5e7eb" }}
-        />
-      ))}
-      <span className="text-[11px] font-semibold text-gray-500 ml-1.5 w-4 text-right tabular-nums">{trl}</span>
-    </div>
-  )
-}
-
 type Axis = "ind" | "tf" | "kf"
 const MAPS: Record<Axis, Record<string, string>> = { ind: IND, tf: TF, kf: KF }
 const AXIS_LABELS: Record<Axis, string> = { ind: "産業", tf: "技術特性", kf: "技術レイヤー" }
@@ -125,13 +107,29 @@ function summaryLine(groups: Group[], axis: Axis): string {
 export function ScenarioOverview({ scenarios }: { scenarios: Scenario[] }) {
   const [axis, setAxis] = useState<Axis>("ind")
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
-  const [modes, setModes] = useState<Set<"avg" | "max">>(new Set(["max"]))
   const [tldrOpen, setTldrOpen] = useState(true)
   const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null)
+  const [panelWidth, setPanelWidth] = useState(400)
 
-  const showAvg = modes.has("avg")
-  const showMax = modes.has("max")
-  const both = showAvg && showMax
+  const handlePanelResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const startWidth = panelWidth
+    document.body.style.userSelect = "none"
+    document.body.style.cursor = "col-resize"
+    const handleMove = (ev: MouseEvent) => {
+      const next = startWidth + (startX - ev.clientX)
+      setPanelWidth(Math.min(800, Math.max(320, next)))
+    }
+    const handleUp = () => {
+      document.body.style.userSelect = ""
+      document.body.style.cursor = ""
+      window.removeEventListener("mousemove", handleMove)
+      window.removeEventListener("mouseup", handleUp)
+    }
+    window.addEventListener("mousemove", handleMove)
+    window.addEventListener("mouseup", handleUp)
+  }
 
   const groups = buildGroups(scenarios, axis)
   const axisCounts: Record<Axis, number> = {
@@ -141,15 +139,6 @@ export function ScenarioOverview({ scenarios }: { scenarios: Scenario[] }) {
   }
 
   const handleAxisChange = (a: Axis) => setAxis(a)
-
-  const toggleMode = (m: "avg" | "max") => {
-    setModes((prev) => {
-      if (prev.has(m) && prev.size === 1) return prev // keep at least one
-      const next = new Set(prev)
-      next.has(m) ? next.delete(m) : next.add(m)
-      return next
-    })
-  }
 
   const toggleExpand = (name: string) => {
     setExpanded((prev) => {
@@ -161,9 +150,6 @@ export function ScenarioOverview({ scenarios }: { scenarios: Scenario[] }) {
 
   const matLabel = (trl: number) =>
     trl >= 6 ? "すぐに狙える。" : trl >= 4 ? "あと一歩。" : "まだ先は長い。"
-
-  const primaryTrl = (g: Group) => showAvg ? g.avgTrl : g.maxTrl
-  const primaryTam = (g: Group) => showAvg ? g.avgTam : g.maxTam
 
   return (
     <div className="flex flex-row flex-1 min-h-0 overflow-hidden">
@@ -192,24 +178,6 @@ export function ScenarioOverview({ scenarios }: { scenarios: Scenario[] }) {
                 <TooltipContent side="bottom" className="text-xs">{AXIS_Q[a]}</TooltipContent>
               </Tooltip>
             ))}
-
-            {/* avg / max multi-select switcher */}
-            <div className="ml-auto flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
-              {(["avg", "max"] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => toggleMode(m)}
-                  className={`text-[11px] px-2.5 py-1 rounded-md transition-all ${
-                    modes.has(m)
-                      ? "bg-white text-blue-600 font-medium shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  {m === "avg" ? "平均" : "最大"}
-                </button>
-              ))}
-            </div>
           </div>
         </TooltipProvider>
 
@@ -224,39 +192,8 @@ export function ScenarioOverview({ scenarios }: { scenarios: Scenario[] }) {
               <ChevronDown className={`h-3.5 w-3.5 text-gray-300 flex-shrink-0 transition-transform ${tldrOpen ? "" : "-rotate-90"}`} />
             </button>
             {tldrOpen && (
-              <div className="px-2.5 pb-2.5 flex flex-col gap-1.5">
-                {/* column headers */}
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className="w-24 flex-shrink-0" />
-                  <span className="w-8 flex-shrink-0 text-[9px] text-gray-400 uppercase tracking-wider text-right">件数</span>
-                  {showAvg && <><span className="flex-1 text-[9px] text-gray-400 uppercase tracking-wider ml-1.5">TRL 平均</span><span className="w-14 flex-shrink-0 text-[9px] text-gray-400 uppercase tracking-wider text-right">市場規模</span></>}
-                  {both && <span className="w-px self-stretch bg-gray-200 mx-0.5 flex-shrink-0" />}
-                  {showMax && <><span className="flex-1 text-[9px] text-gray-400 uppercase tracking-wider ml-1.5">TRL 最大</span><span className="w-14 flex-shrink-0 text-[9px] text-gray-400 uppercase tracking-wider text-right">市場規模</span></>}
-                </div>
-                {(() => {
-                  const sorted = [...groups].sort((a, b) => primaryTrl(b) - primaryTrl(a))
-                  const topAvgTam = Math.max(...groups.map((g) => g.avgTam))
-                  const topMaxTam = Math.max(...groups.map((g) => g.maxTam))
-                  return sorted.map((g) => (
-                    <div key={g.name} className="flex items-center gap-1.5">
-                      <span className="w-24 flex-shrink-0 text-[11px] font-semibold text-gray-600 truncate">{g.name}</span>
-                      <span className="w-8 flex-shrink-0 text-[11px] font-semibold text-gray-700 tabular-nums text-right">{g.items.length}</span>
-                      {showAvg && (
-                        <>
-                          <TrlMiniBar trl={g.avgTrl} />
-                          <span className={`w-14 flex-shrink-0 text-[11px] tabular-nums text-right ${g.avgTam === topAvgTam ? "font-bold text-blue-600" : "font-medium text-gray-500"}`}>{fmtTam(g.avgTam)}</span>
-                        </>
-                      )}
-                      {both && <span className="w-px self-stretch bg-gray-200 mx-0.5 flex-shrink-0" />}
-                      {showMax && (
-                        <>
-                          <TrlMiniBar trl={g.maxTrl} />
-                          <span className={`w-14 flex-shrink-0 text-[11px] tabular-nums text-right ${g.maxTam === topMaxTam ? "font-bold text-blue-600" : "font-medium text-gray-500"}`}>{fmtTam(g.maxTam)}</span>
-                        </>
-                      )}
-                    </div>
-                  ))
-                })()}
+              <div className="px-2.5 pb-2.5">
+                <p className="text-xs text-gray-600 leading-relaxed">{summaryLine(groups, axis)}</p>
               </div>
             )}
           </div>
@@ -297,19 +234,10 @@ export function ScenarioOverview({ scenarios }: { scenarios: Scenario[] }) {
                         onClick={() => setSelectedScenario(s)}
                       >
                         <div className="flex-1 text-gray-700 leading-snug min-w-0">{s.name}</div>
-                        {showAvg && (
-                          <div className="flex items-center gap-3 flex-shrink-0">
-                            <span className={`tabular-nums w-14 text-right ${tamCls}`}>{tam}</span>
-                            <span className={`tabular-nums w-12 text-right ${trlCls}`}>TRL {trl}</span>
-                          </div>
-                        )}
-                        {both && <span className="w-px self-stretch bg-gray-200 flex-shrink-0 mx-0.5" />}
-                        {showMax && (
-                          <div className="flex items-center gap-3 flex-shrink-0">
-                            <span className={`tabular-nums w-14 text-right ${tamCls}`}>{tam}</span>
-                            <span className={`tabular-nums w-12 text-right ${trlCls}`}>TRL {trl}</span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <span className={`tabular-nums w-14 text-right ${tamCls}`}>{tam}</span>
+                          <span className={`tabular-nums w-12 text-right ${trlCls}`}>TRL {trl}</span>
+                        </div>
                       </div>
                     )
                   }
@@ -318,19 +246,10 @@ export function ScenarioOverview({ scenarios }: { scenarios: Scenario[] }) {
                       {/* column header */}
                       <div className="flex items-center gap-2 px-3 pt-1.5 pb-1 border-b border-gray-50">
                         <div className="flex-1 text-[9px] text-gray-400 uppercase tracking-wider">シナリオ</div>
-                        {showAvg && (
-                          <div className="flex items-center gap-3 flex-shrink-0">
-                            <span className="text-[9px] text-gray-400 uppercase tracking-wider w-14 text-right">市場規模</span>
-                            <span className="text-[9px] text-gray-400 uppercase tracking-wider w-12 text-right">{both ? "TRL 平均" : "TRL"}</span>
-                          </div>
-                        )}
-                        {both && <span className="w-px self-stretch bg-gray-200 flex-shrink-0 mx-0.5" />}
-                        {showMax && (
-                          <div className="flex items-center gap-3 flex-shrink-0">
-                            <span className="text-[9px] text-gray-400 uppercase tracking-wider w-14 text-right">市場規模</span>
-                            <span className="text-[9px] text-gray-400 uppercase tracking-wider w-12 text-right">{both ? "TRL 最大" : "TRL"}</span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <span className="text-[9px] text-gray-400 uppercase tracking-wider w-14 text-right">市場規模</span>
+                          <span className="text-[9px] text-gray-400 uppercase tracking-wider w-12 text-right">TRL</span>
+                        </div>
                       </div>
                       {g.items.map((s) => <ScenarioRow key={s.id} s={s} />)}
                     </div>
@@ -358,7 +277,11 @@ export function ScenarioOverview({ scenarios }: { scenarios: Scenario[] }) {
 
     {/* Right panel — shown when a scenario row is selected */}
     {selectedScenario && (
-      <div className="w-[400px] flex-shrink-0 border-l border-gray-200 overflow-hidden flex flex-col">
+      <div className="relative flex-shrink-0 border-l border-gray-200 overflow-hidden flex flex-col" style={{ width: panelWidth }}>
+        <div
+          onMouseDown={handlePanelResizeStart}
+          className="absolute left-0 top-0 h-full w-1 -ml-0.5 cursor-col-resize hover:bg-blue-300 active:bg-blue-400 z-10 transition-colors"
+        />
         <ScenarioPaperPanel
           scenario={selectedScenario}
           onClose={() => setSelectedScenario(null)}
