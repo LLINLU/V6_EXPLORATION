@@ -191,7 +191,7 @@ export const TreeGenerationSection = ({ onModeChange }: Props) => {
 		if (!searchValue.trim() || isGenerating) return
 
 		if (selectedMode === "FAST") {
-			navigate("/v1/problem")
+			navigate("/v1/problem", { state: { theme: searchValue } })
 			return
 		}
 
