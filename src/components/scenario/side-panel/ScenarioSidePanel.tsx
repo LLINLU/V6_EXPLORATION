@@ -188,8 +188,7 @@ function trlNodeColors(trl: number | null): { bg: string; border: string; arrow:
 
 function TrlPipelineDiagram({ rows }: { rows: TrlRow[] }) {
 	if (rows.length === 0) return null
-	const mainRows = rows.length >= 4 ? rows.slice(0, rows.length - 1) : rows
-	const supportingRow = rows.length >= 4 ? rows[rows.length - 1] : null
+	const mainRows = rows
 
 	return (
 		<div className="mb-4">
@@ -225,22 +224,6 @@ function TrlPipelineDiagram({ rows }: { rows: TrlRow[] }) {
 						)
 					})}
 				</div>
-				{supportingRow && (() => {
-					const colors = trlNodeColors(supportingRow.trl)
-					return (
-						<div className="mt-3 inline-block">
-							<div className="rounded-lg p-2.5 max-w-[220px]" style={{ backgroundColor: colors.bg, border: `1px dashed ${colors.border}` }}>
-								<p className="text-[11px] font-semibold text-gray-800 leading-tight mb-0.5">{supportingRow.name}</p>
-								{supportingRow.trl != null && (
-									<p className="text-[10px] mb-1.5" style={{ color: colors.text }}>
-										TRL {supportingRow.trl} – {supportingRow.interpretation}
-									</p>
-								)}
-								<p className="text-[10px] text-gray-500 leading-relaxed line-clamp-2">{supportingRow.explanation}</p>
-							</div>
-						</div>
-					)
-				})()}
 			</div>
 		</div>
 	)

@@ -1,11 +1,14 @@
 "use client"
 
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp, Check, RotateCcw, Search } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
+import { ArrowLeft, ArrowRight, ArrowUp } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { AppSidebar } from "@/components/AppSidebar"
+import { SidebarProvider } from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
 
-type Step = 1 | 2 | 3
+type Step = 1 | 2 | 3 | 4
 
 // ─── Mock data ────────────────────────────────────────────────
 
@@ -18,6 +21,7 @@ const MOCK_ENRICHED = {
 	where: "日本（特に都市部・郊外住宅地）",
 	when: "2035年",
 	who: "地域住民（特に高齢者・子育て世帯）",
+	what: "猛暑下における地域コミュニティ活動・社会参加の維持",
 	techState:
 		"2035年には屋外熱ストレス計測・スマート冷却技術が実用段階へ移行するが、普及率は地域差が大きく、低所得地域への展開は遅れる見込み。ウェアラブル熱センサーの普及率は60%超を予測（NEDO, 2024）。",
 	regState:
@@ -208,51 +212,39 @@ const SCENARIOS: Scenario[] = [
 
 // ─── Sub-components ───────────────────────────────────────────
 
-function ProgressBar({ step }: { step: Step }) {
-	const steps = [
-		{ n: 1, label: "問題の精緻化" },
-		{ n: 2, label: "ボトルネック分解" },
-		{ n: 3, label: "解決シナリオ" },
-	] as const
+const SIDEBAR_STEPS = [
+	{ n: 1, label: "テーマを決める" },
+	{ n: 2, label: "問題文を固める" },
+	{ n: 3, label: "全体像を調べる" },
+	{ n: 4, label: "問題を洗い出す" },
+	{ n: 5, label: "起点を選ぶ" },
+	{ n: 6, label: "解決アプローチ" },
+	{ n: 7, label: "技術分解" },
+] as const
 
+function StepSidebar({ active }: { active: number }) {
 	return (
-		<div className="sticky top-0 z-10 bg-white border-b border-gray-200">
-			<div className="max-w-5xl mx-auto px-6 flex items-stretch h-14">
-				{steps.map(({ n, label }, i) => {
-					const done = n < step
-					const active = n === step
-					return (
-						<div key={n} className="flex items-center flex-1">
-							<div className={cn("flex items-center gap-2.5 py-4 flex-1", active && "opacity-100", !active && !done && "opacity-40")}>
-								<div
-									className={cn(
-										"w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
-										done && "bg-[#1e293b] text-white",
-										active && "bg-[#4f5fe0] text-white",
-										!done && !active && "bg-gray-200 text-gray-500",
-									)}
-								>
-									{done ? <Check className="w-3.5 h-3.5" /> : n}
-								</div>
-								<span
-									className={cn(
-										"text-sm font-medium whitespace-nowrap",
-										active && "text-[#1e293b]",
-										done && "text-[#1e293b]",
-										!done && !active && "text-gray-400",
-									)}
-								>
-									{label}
-								</span>
-							</div>
-							{i < steps.length - 1 && (
-								<div className={cn("w-8 h-px mx-2 shrink-0", done ? "bg-[#1e293b]" : "bg-gray-200")} />
-							)}
-						</div>
-					)
-				})}
-			</div>
-		</div>
+		<nav className="w-52 shrink-0 border-r border-gray-100 py-4 px-2 flex flex-col gap-0.5 overflow-y-auto">
+			{SIDEBAR_STEPS.map(({ n, label }) => {
+				const isActive = n === active
+				return (
+					<div
+						key={n}
+						className={cn(
+							"flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap",
+							isActive
+								? "bg-[#eef0fd66] text-[#4f5fe0] font-semibold"
+								: "text-gray-400 font-medium",
+						)}
+					>
+						<span className={cn("font-mono text-[10px] w-3.5 shrink-0", isActive ? "text-[#4f5fe0]" : "text-gray-300")}>
+							{n}
+						</span>
+						{label}
+					</div>
+				)
+			})}
+		</nav>
 	)
 }
 
@@ -293,93 +285,91 @@ function AxisBadge({ label, color }: { label: string; color: string }) {
 	)
 }
 
-function Accordion({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
-	const [open, setOpen] = useState(defaultOpen)
-	return (
-		<div className="border border-gray-200 rounded-lg overflow-hidden">
-			<button
-				onClick={() => setOpen(!open)}
-				className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50 transition-colors text-left"
-			>
-				<span className="text-sm font-semibold text-[#1e293b]">{title}</span>
-				{open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-			</button>
-			{open && <div className="px-4 pb-4 pt-1 border-t border-gray-100 bg-white">{children}</div>}
-		</div>
-	)
-}
 
 // ─── Step 1 ───────────────────────────────────────────────────
 
 function Step1({
+	input,
+	setInput,
+	extracted,
+	setExtracted,
 	onDone,
 }: {
+	input: string
+	setInput: (v: string) => void
+	extracted: boolean
+	setExtracted: (v: boolean) => void
 	onDone: () => void
 }) {
-	const [input, setInput] = useState("")
 	const [loading, setLoading] = useState(false)
-	const [enriched, setEnriched] = useState(false)
 	const [where, setWhere] = useState(MOCK_ENRICHED.where)
 	const [when, setWhen] = useState(MOCK_ENRICHED.when)
 	const [who, setWho] = useState(MOCK_ENRICHED.who)
+	const [what, setWhat] = useState(MOCK_ENRICHED.what)
 
-	const runEnrich = (text: string) => {
-		if (!text.trim()) return
+	const runExtract = (text: string) => {
+		const trimmed = text.trim()
+		if (!trimmed) return
 		setLoading(true)
 		setTimeout(() => {
 			setLoading(false)
-			setEnriched(true)
-		}, 1600)
+			if (trimmed === SAMPLE_PROBLEM) {
+				setWhere(MOCK_ENRICHED.where)
+				setWhen(MOCK_ENRICHED.when)
+				setWho(MOCK_ENRICHED.who)
+				setWhat(MOCK_ENRICHED.what)
+			} else {
+				setWhere("未指定")
+				setWhen("未指定")
+				setWho("未指定")
+				setWhat(trimmed)
+			}
+			setExtracted(true)
+		}, 900)
 	}
+
+	const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+	useEffect(() => {
+		const el = textareaRef.current
+		if (!el) return
+		el.style.height = "auto"
+		el.style.height = `${el.scrollHeight}px`
+	}, [input])
 
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		if (e.key === "Enter" && !e.shiftKey) {
 			e.preventDefault()
-			runEnrich(input)
+			runExtract(input)
 		}
 	}
 
 	return (
 		<div className="max-w-3xl mx-auto px-6 pb-16 pt-10">
-			{/* Hero */}
-			<div className="mb-10">
-				<p className="text-xs font-semibold tracking-widest uppercase text-[#4f5fe0] mb-2">
-					Scenario Exploration
-				</p>
-				<h1 className="text-2xl font-bold text-[#1e293b] mb-2">解決したい問題を入力してください</h1>
-				<p className="text-sm text-gray-500">問題文を入力すると、コンテキストを補足・精緻化します</p>
-			</div>
-
 			{/* Search box */}
+			<h2 className="text-base font-semibold text-[#1e293b] mb-2">問題</h2>
 			<div className="mb-3">
-				<div className="flex items-start gap-2 bg-white border border-gray-200 rounded-xl px-4 py-3 focus-within:border-[#4f5fe0] transition-colors shadow-sm">
-					<textarea
-						value={input}
-						onChange={(e) => setInput(e.target.value)}
-						onKeyDown={handleKeyDown}
-						disabled={loading || enriched}
-						placeholder="例：地球温暖化の暑さのせいで地域の人付き合いや活動が減り、それが生活の質を下げている"
-						rows={2}
-						className="flex-1 bg-transparent resize-none text-sm text-gray-800 placeholder-gray-400 outline-none leading-relaxed"
-					/>
-					<button
-						onClick={() => runEnrich(input)}
-						disabled={!input.trim() || loading || enriched}
-						className="mt-0.5 shrink-0 w-8 h-8 rounded-lg bg-[#1e293b] hover:bg-[#2d3f55] disabled:bg-gray-200 transition-colors flex items-center justify-center"
-					>
-						<Search className="w-4 h-4 text-white" />
-					</button>
-				</div>
-				<div className="flex items-center gap-3 mt-2 px-1">
-					<button
-						onClick={() => setInput(SAMPLE_PROBLEM)}
-						disabled={enriched}
-						className="text-xs text-[#4f5fe0] hover:underline disabled:opacity-40"
-					>
-						サンプル入力を使う
-					</button>
-					<span className="text-xs text-gray-300">·</span>
-					<span className="text-xs text-gray-400">Enterで精緻化</span>
+				<div className="p-5 border border-[#ebf0f7] rounded-2xl" style={{ backgroundColor: "#fbfbfb" }}>
+					<div className="relative">
+						<textarea
+							ref={textareaRef}
+							value={input}
+							onChange={(e) => setInput(e.target.value)}
+							onKeyDown={handleKeyDown}
+							disabled={loading}
+							placeholder="例：地球温暖化の暑さのせいで地域の人付き合いや活動が減り、それが生活の質を下げている"
+							rows={1}
+							className="w-full resize-none overflow-hidden bg-gray-50 rounded-xl px-4 py-3 pr-12 text-sm text-gray-800 placeholder:text-gray-400 border-none outline-none focus-visible:ring-0 leading-relaxed"
+						/>
+						<Button
+							onClick={() => runExtract(input)}
+							size="icon"
+							disabled={!input.trim() || loading}
+							className="absolute bottom-2 right-2 h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+						>
+							<ArrowUp className="h-4 w-4 text-gray-600" />
+						</Button>
+					</div>
 				</div>
 			</div>
 
@@ -387,76 +377,48 @@ function Step1({
 			{loading && (
 				<div className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-100 rounded-lg mb-6">
 					<div className="w-4 h-4 border-2 border-[#4f5fe0] border-t-transparent rounded-full animate-spin shrink-0" />
-					<span className="text-sm text-[#4f5fe0]">問題を分析・精緻化しています...</span>
+					<span className="text-sm text-[#4f5fe0]">4項目を抽出しています...</span>
 				</div>
 			)}
 
-			{/* Enriched card */}
-			{enriched && (
-				<div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-					<div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100 bg-[#f8fafc]">
-						<span className="font-mono text-xs font-bold bg-[#1e293b] text-white px-2 py-0.5 rounded">
-							STEP 1
-						</span>
-						<span className="text-sm font-semibold text-[#1e293b]">
-							問題の精緻化 — 確認・編集してください
-						</span>
+			{/* 4W confirmation (GATE 1) */}
+			{extracted && (
+				<div className="mb-6">
+					<div className="mb-8">
+						<span className="text-sm font-semibold text-[#1e293b]">抽出した4項目を確認してください</span>
+						<p className="text-xs text-gray-500 mt-3">
+							叩き台です。クリックして書き換えられます。確定すると次の「問題文を固める」に進みます。
+						</p>
 					</div>
-					<div className="p-5 space-y-4">
-						{/* Enriched sentence */}
-						<div className="text-sm text-gray-700 leading-relaxed border-l-4 border-[#4f5fe0] pl-4 py-1 bg-[#f5f6ff] rounded-r-lg">
-							{MOCK_ENRICHED.sentence}
-						</div>
-
-						{/* WHERE / WHEN / WHO */}
-						<div className="grid grid-cols-3 gap-3">
-							{[
-								{ label: "WHERE", val: where, set: setWhere },
-								{ label: "WHEN", val: when, set: setWhen },
-								{ label: "WHO", val: who, set: setWho },
-							].map(({ label, val, set }) => (
-								<div key={label}>
-									<p className="font-mono text-xs text-[#4f5fe0] font-bold mb-1">{label}</p>
-									<input
-										value={val}
-										onChange={(e) => set(e.target.value)}
-										className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:border-[#4f5fe0] bg-white"
-									/>
-								</div>
-							))}
-						</div>
-
-						{/* 3-axis accordions */}
-						<div className="space-y-2">
-							<Accordion title="技術の状態" defaultOpen>
-								<p className="text-sm text-gray-600 leading-relaxed">{MOCK_ENRICHED.techState}</p>
-							</Accordion>
-							<Accordion title="規制・制度">
-								<p className="text-sm text-gray-600 leading-relaxed">{MOCK_ENRICHED.regState}</p>
-							</Accordion>
-							<Accordion title="社会構造">
-								<p className="text-sm text-gray-600 leading-relaxed">{MOCK_ENRICHED.socState}</p>
-							</Accordion>
-						</div>
-
-						{/* Actions */}
-						<div className="flex items-center justify-between pt-2">
-							<button
-								onClick={() => {
-									setEnriched(false)
-									setInput("")
-								}}
-								className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg px-3 py-2 transition-colors"
-							>
-								<RotateCcw className="w-3.5 h-3.5" />
-								リセット
-							</button>
+					<div className="space-y-5">
+						{[
+							{ id: "where", label: "WHERE（国・地域）", val: where, set: setWhere },
+							{ id: "when", label: "WHEN（年）", val: when, set: setWhen },
+							{ id: "who", label: "WHO（当事者）", val: who, set: setWho },
+							{ id: "what", label: "WHAT（活動・ドメイン）", val: what, set: setWhat },
+						].map(({ id, label, val, set }) => (
+							<div key={id} className="relative">
+								<input
+									id={`gate1-${id}`}
+									value={val}
+									onChange={(e) => set(e.target.value)}
+									placeholder=" "
+									className="peer w-full h-14 px-4 pt-3 text-base text-gray-900 bg-white rounded border border-[#dddfe2] outline-none transition-colors hover:border-[#93c5fd] focus:border-2 focus:border-[#4f5fe0] focus:hover:border-[#4f5fe0]"
+								/>
+								<label
+									htmlFor={`gate1-${id}`}
+									className="absolute left-3 -top-2.5 bg-white px-1 font-mono text-[11px] text-gray-500 peer-focus:text-[#4f5fe0] pointer-events-none"
+								>
+									{label}
+								</label>
+							</div>
+						))}
+						<div className="flex justify-end pt-2">
 							<button
 								onClick={onDone}
-								className="inline-flex items-center gap-2 bg-[#1e293b] hover:bg-[#2d3f55] text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors"
+								className="inline-flex items-center gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors"
 							>
-								ボトルネック分解へ
-								<ArrowRight className="w-4 h-4" />
+								次へ
 							</button>
 						</div>
 					</div>
@@ -466,7 +428,111 @@ function Step1({
 	)
 }
 
-// ─── Step 2 ───────────────────────────────────────────────────
+// ─── Step 2: 問題文を固める ─────────────────────────────────────
+
+const MOCK_MEMO = [
+	{
+		text: "2035年には屋外熱ストレス計測・スマート冷却技術が実用段階へ移行するが、普及率は地域差が大きく、低所得地域への展開は遅れる見込み。ウェアラブル熱センサーの普及率は60%超を予測。",
+		cite: "NEDO, 2024",
+	},
+	{
+		text: "ヒートアイランド対策を義務化する都市計画法改正が2028年頃施行見込み。気候変動適応法の地方自治体向けガイドラインも2026年改訂予定。",
+		cite: "環境省",
+	},
+	{
+		text: "単身高齢者世帯の割合は2035年に32%へ。暑熱による外出抑制がさらに孤立を深める悪循環が予測されている。",
+		cite: "国立社会保障・人口問題研究所, 2023",
+	},
+]
+
+function Step2ProblemStatement({ onDone }: { onDone: () => void }) {
+	const [loading, setLoading] = useState(false)
+	const [enriched, setEnriched] = useState(false)
+	const [problemText, setProblemText] = useState("")
+	const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+	useEffect(() => {
+		const el = textareaRef.current
+		if (!el) return
+		el.style.height = "auto"
+		el.style.height = `${el.scrollHeight}px`
+	}, [problemText])
+
+	const runEnrich = () => {
+		setLoading(true)
+		setTimeout(() => {
+			setLoading(false)
+			setProblemText(MOCK_ENRICHED.sentence)
+			setEnriched(true)
+		}, 1600)
+	}
+
+	return (
+		<div className="max-w-3xl mx-auto px-6 pb-16 pt-10">
+			<h2 className="text-lg font-bold text-[#1e293b] mb-1.5">問題文を固める</h2>
+			<p className="text-sm text-gray-500 leading-relaxed mb-5">
+				ここで作る問題文が、この先すべての調査の土台になります。あいまいなまま進むと分析全体がずれるため、まずweb調査で事実を確かめながら、問題を1文に固めます。下書きは自由に書き換えられます。
+			</p>
+
+			{!enriched && (
+				<button
+					onClick={runEnrich}
+					disabled={loading}
+					className="inline-flex items-center gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-60 disabled:cursor-default text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors"
+				>
+					{loading && <span className="w-3.5 h-3.5 border-2 border-white/60 border-t-transparent rounded-full animate-spin" />}
+					{loading ? "調査中…（1〜2分）" : "調査して問題文を固める（1〜2分）"}
+				</button>
+			)}
+
+			{enriched && (
+				<>
+					<div className="mt-6 pt-6 border-t border-dashed border-gray-200">
+						<div className="mb-2">
+							<span className="text-sm font-semibold text-[#1e293b]">問題文の下書き</span>
+							<span className="text-xs text-gray-400 ml-2">クリックして書き換えられます</span>
+						</div>
+						<textarea
+							ref={textareaRef}
+							value={problemText}
+							onChange={(e) => setProblemText(e.target.value)}
+							rows={1}
+							className="w-full resize-none overflow-hidden border border-[#c9cdf5] rounded-xl bg-[#fbfcfe] px-4 py-3.5 text-sm text-gray-800 leading-relaxed outline-none focus:border-[#4f5fe0] transition-colors"
+						/>
+					</div>
+
+					<div className="mt-6">
+						<div className="mb-2">
+							<span className="text-sm font-semibold text-[#1e293b]">裏取りメモ</span>
+							<span className="text-xs text-gray-400 ml-2">調査で確認した事実と出典</span>
+						</div>
+						<div className="flex flex-col gap-3">
+							{MOCK_MEMO.map((m) => (
+								<div key={m.cite} className="text-sm text-gray-600 leading-relaxed border-l-2 border-gray-200 pl-3">
+									{m.text}{" "}
+									<span className="font-mono text-[11px] text-gray-500 bg-gray-100 rounded px-1.5 py-0.5 whitespace-nowrap">
+										{m.cite}
+									</span>
+								</div>
+							))}
+						</div>
+					</div>
+
+					<div className="flex justify-end mt-6">
+						<button
+							onClick={onDone}
+							className="inline-flex items-center gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors"
+						>
+							この問題文で確定 → 全体像を調べる
+						</button>
+					</div>
+				</>
+			)}
+		</div>
+	)
+}
+
+// ─── Step 3: ボトルネック分解 ────────────────────────────────────
 
 const TOE_CARDS = [
 	{ axis: "技術的", q: "技術的に可能か？", color: "#4f5fe0" },
@@ -520,7 +586,7 @@ function BnDetailRow({ bn }: { bn: BN }) {
 	)
 }
 
-function Step2({ onDone }: { onDone: () => void }) {
+function Step3({ onDone }: { onDone: () => void }) {
 	return (
 		<div className="max-w-5xl mx-auto px-6 pb-16 pt-8">
 			{/* Problem callout */}
@@ -592,9 +658,9 @@ function Step2({ onDone }: { onDone: () => void }) {
 	)
 }
 
-// ─── Step 3 ───────────────────────────────────────────────────
+// ─── Step 4 ───────────────────────────────────────────────────
 
-function Step3({ onSelectScenario }: { onSelectScenario: (id: string) => void }) {
+function Step4({ onSelectScenario }: { onSelectScenario: (id: string) => void }) {
 	const [activeFilter, setActiveFilter] = useState<string | null>(null)
 
 	const filters = ["すべて", ...Array.from(new Set(SCENARIOS.map((s) => s.axis)))]
@@ -705,32 +771,68 @@ function Step3({ onSelectScenario }: { onSelectScenario: (id: string) => void })
 
 export default function V1ProblemFlow() {
 	const navigate = useNavigate()
+	const location = useLocation()
+	const incomingTheme = (location.state as { theme?: string } | null)?.theme?.trim()
 	const [step, setStep] = useState<Step>(1)
+	const [query, setQuery] = useState(incomingTheme || SAMPLE_PROBLEM)
+	const [extracted, setExtracted] = useState(!!incomingTheme)
+	const activeSidebarStep = step === 1 ? 1 : step === 2 ? 2 : step === 3 ? 4 : 6
 
 	return (
-		<div className="min-h-screen bg-[#f9fafb]">
-			{/* Back nav */}
-			<div className="bg-white border-b border-gray-100 px-6 py-2.5">
-				<button
-					onClick={() => navigate("/")}
-					className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors"
-				>
-					<ArrowLeft className="w-4 h-4" />
-					エントリーページへ戻る
-				</button>
+		<SidebarProvider defaultOpen={false}>
+		<div className="h-screen bg-gray-100 flex w-full">
+			<AppSidebar />
+		<div className="flex-1 min-w-0 flex flex-col gap-1 p-2">
+			{/* Navbar */}
+			<div className="flex-shrink-0 bg-white rounded-lg px-4 py-2 flex items-center justify-between gap-3">
+				<div className="flex items-center shrink-0 w-[100px]">
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon"
+						onClick={() => navigate("/")}
+						className="h-8 w-8 text-gray-500 hover:text-gray-800"
+					>
+						<ArrowLeft className="h-4 w-4" />
+					</Button>
+				</div>
+
+				<div className="flex items-center gap-2 shrink-0">
+					<Button
+						className="ask-ai-btn rounded-full px-[18px] text-white font-medium"
+						style={{ height: "36px", width: "100px" }}
+					>
+						<span className="text-white font-medium">Ask AI</span>
+					</Button>
+				</div>
 			</div>
 
-			<ProgressBar step={step} />
-
-			{step === 1 && <Step1 onDone={() => setStep(2)} />}
-			{step === 2 && <Step2 onDone={() => setStep(3)} />}
-			{step === 3 && (
-				<Step3
-					onSelectScenario={(id) => {
-						navigate(`/v1/prioritization?from=problem&scenario=${id}`)
-					}}
-				/>
-			)}
+			{/* Main body */}
+			<div className="flex-1 min-h-0 overflow-hidden bg-white rounded-lg flex">
+				<StepSidebar active={activeSidebarStep} />
+				<div className="flex-1 min-h-0 overflow-y-auto">
+					{step === 1 && (
+						<Step1
+							input={query}
+							setInput={setQuery}
+							extracted={extracted}
+							setExtracted={setExtracted}
+							onDone={() => setStep(2)}
+						/>
+					)}
+					{step === 2 && <Step2ProblemStatement onDone={() => setStep(3)} />}
+					{step === 3 && <Step3 onDone={() => setStep(4)} />}
+					{step === 4 && (
+						<Step4
+							onSelectScenario={(id) => {
+								navigate(`/v1/prioritization?from=problem&scenario=${id}`)
+							}}
+						/>
+					)}
+				</div>
+			</div>
 		</div>
+		</div>
+		</SidebarProvider>
 	)
 }
