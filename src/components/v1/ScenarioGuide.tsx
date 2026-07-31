@@ -569,11 +569,8 @@ export function ScenarioGuide({ scenarios }: { scenarios: Scenario[] }) {
             </div>
           ))}
         </div>
-        <div className="text-xs text-gray-500 mb-1">
-          各ステップの条件でシナリオを絞り込み、最終的に有望なシナリオを特定します。
-        </div>
-        <div className="text-[11px] text-gray-400 mb-4">
-          すべてのステップは任意です。ステップ番号をクリックすると直接移動できます。
+        <div className="text-xs text-gray-500 mb-4">
+          各ステップでシナリオを絞り込み、有望なシナリオを特定します（すべて任意・ステップ番号で直接移動可）。
         </div>
 
         {/* Step card */}
