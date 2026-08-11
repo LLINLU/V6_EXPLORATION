@@ -468,6 +468,7 @@ export function ScenarioSelectionMainLayout({
 					},
 					tags: [],
 					isManuallyAdded: true,
+					userInput: { name: input.name, summary: input.summary },
 				},
 			])
 		}
@@ -512,6 +513,7 @@ export function ScenarioSelectionMainLayout({
 					},
 					tags: [],
 					isAIGenerated: true,
+					aiGenerationInput: { context },
 				}),
 			)
 			onScenarioAdded?.(newScenarios)

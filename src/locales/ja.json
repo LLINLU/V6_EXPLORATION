@@ -465,7 +465,8 @@
 			"retry_generation": "再試行",
 			"no_data_tooltip": "データなし",
 			"new_scenario": "新しいシナリオ",
-			"ai_added_badge": "AI",
+			"ai_added_badge": "AIで追加",
+			"manual_added_badge": "手動追加",
 			"delete": "削除",
 			"delete_column": "列を削除",
 			"clear_all_filters": "全フィルターをクリア"
@@ -710,6 +711,14 @@
 			"copied_title": "コピーしました",
 			"copied_description": "コンテンツをクリップボードにコピーしました"
 		},
+		"manual_detail": {
+			"title": "手動追加の内容",
+			"name_label": "シナリオ名",
+			"summary_label": "概要",
+			"copy_sr": "コピー",
+			"copied_title": "コピーしました",
+			"copied_description": "コンテンツをクリップボードにコピーしました"
+		},
 		"custom_view": {
 			"title": "カスタムビュー",
 			"description": "カスタムビューに表示するメトリクスを選択",
@@ -773,7 +782,13 @@
 			"status_running": "実行中",
 			"status_done": "完了",
 			"status_error": "エラー",
-			"sections_complete": "{{done}}/{{total}} セクション完了"
+			"sections_complete": "{{done}}/{{total}} セクション完了",
+			"existing_tree_heading": "同じクエリで作成済み",
+			"generate_new_tree": "新しく作成する",
+			"tree_version": "バージョン {{n}}",
+			"today": "今日",
+			"yesterday": "昨日",
+			"version_tag_tooltip": "クリックしてバージョンを切り替え"
 		},
 		"metrics": {
 			"category_market": "市場指標",

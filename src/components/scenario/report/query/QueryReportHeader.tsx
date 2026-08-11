@@ -9,6 +9,7 @@ import {
 	FileCode,
 	FileText,
 	Lightbulb,
+	Plus,
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -29,6 +30,11 @@ import {
 	downloadQueryReportAsPdf,
 } from "@/lib/downloadQueryReport"
 import { getOutputLanguage } from "@/lib/outputLanguage"
+import { formatDayLabel } from "@/lib/relativeDate"
+import {
+	findExistingTrees,
+	type TreeVersion,
+} from "@/services/treeGenerationService"
 import type { TechStrength } from "@/types/axis"
 import type { QueryReportData } from "@/types/query-report"
 
@@ -114,14 +120,28 @@ export function QueryReportHeader({
 	const [showTechDialog, setShowTechDialog] = useState(false)
 	const [isLoadingTechStrengths, setIsLoadingTechStrengths] = useState(false)
 	const [techStrengths, setTechStrengths] = useState<TechStrength[]>([])
+	const [existingTreeMatches, setExistingTreeMatches] = useState<TreeVersion[]>(
+		[],
+	)
+	const [showExistingTreeChoice, setShowExistingTreeChoice] = useState(false)
+	const [existingTreeCheckMode, setExistingTreeCheckMode] = useState<
+		"TED" | "FAST" | null
+	>(null)
+	const [existingTreeFallback, setExistingTreeFallback] = useState<
+		(() => void) | null
+	>(null)
 
 	useEffect(() => {
 		setInputQuery(query)
 	}, [query])
 
+	// Hardcoded to match the dropdown menu items' literal text exactly — the
+	// mode_ted_label/mode_fast_label i18n keys resolve to different, shorter
+	// strings used elsewhere (e.g. the home page's mode selector), which
+	// caused the trigger button to show different copy than what was picked.
 	const labels: Record<Mode, string> = {
-		TED: t("index.mode_ted_label", "技術の応用先を探索する"),
-		FAST: t("index.mode_fast_label", "技術の構成要素を分解する"),
+		TED: "シナリオを探索する",
+		FAST: "技術の構成要素を分解する",
 		QUERY: t("index.mode_query_label", "技術の全体像を把握する"),
 	}
 
@@ -301,6 +321,38 @@ export function QueryReportHeader({
 		navigate(`/scenario-selection?tree_id=${encodeURIComponent(queryId)}`)
 	}
 
+	// Picking a specific past version in this exploration branch always lands
+	// on the same dummy-data page (/v1/prioritization or /v1/treemap) — those
+	// pages don't read a tree_id at all, they just render hardcoded scenarios.
+	// The point here is to demo the picker interaction, not per-version pages.
+	const handleSelectExistingTree = (_treeId: string) => {
+		setShowExistingTreeChoice(false)
+		navigate(
+			existingTreeCheckMode === "FAST" ? "/v1/treemap" : "/v1/prioritization",
+		)
+	}
+
+	const handleGenerateNewTreeAnyway = () => {
+		setShowExistingTreeChoice(false)
+		existingTreeFallback?.()
+	}
+
+	const checkExistingTreesAndNavigate = async (
+		targetMode: "TED" | "FAST",
+		fallback: () => void,
+	) => {
+		const q = (inputQuery || query).trim()
+		const matches = await findExistingTrees(q, targetMode)
+		if (matches.length > 0) {
+			setExistingTreeMatches(matches)
+			setExistingTreeCheckMode(targetMode)
+			setExistingTreeFallback(() => fallback)
+			setShowExistingTreeChoice(true)
+			return
+		}
+		fallback()
+	}
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 		const q = inputQuery.trim()
@@ -319,13 +371,15 @@ export function QueryReportHeader({
 			return
 		}
 
-		if (mode === "TED" && queryId) {
-			await handleOpenScenarioSelection()
-			return
+		if (mode === "TED" || mode === "FAST") {
+			await checkExistingTreesAndNavigate(mode, () => {
+				if (mode === "TED" && queryId) {
+					void handleOpenScenarioSelection()
+					return
+				}
+				navigate("/", { state: { query: q, mode } })
+			})
 		}
-
-		// For TED/FAST, hand off to Index with the query + mode pre-applied
-		navigate("/", { state: { query: q, mode } })
 	}
 
 	return (
@@ -378,16 +432,26 @@ export function QueryReportHeader({
 								)}
 							</DropdownMenuItem>
 							<DropdownMenuItem
-								onSelect={() => navigate("/v1/prioritization")}
+								onSelect={() => {
+									setMode("TED")
+									void checkExistingTreesAndNavigate("TED", () =>
+										navigate("/v1/prioritization"),
+									)
+								}}
 								className="flex items-center justify-between px-3 py-2 text-sm cursor-pointer"
 							>
-								<span>シナリオを探索する</span>
+								<span>{labels.TED}</span>
 							</DropdownMenuItem>
 							<DropdownMenuItem
-								onSelect={() => navigate("/v1/treemap")}
+								onSelect={() => {
+									setMode("FAST")
+									void checkExistingTreesAndNavigate("FAST", () =>
+										navigate("/v1/treemap"),
+									)
+								}}
 								className="flex items-center justify-between px-3 py-2 text-sm cursor-pointer"
 							>
-								<span>ツリーマップを直接生成する</span>
+								<span>{labels.FAST}</span>
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
@@ -400,6 +464,51 @@ export function QueryReportHeader({
 							placeholder={t("tech_page.queryPlaceholder", "クエリを入力")}
 							className="h-9 pr-10"
 						/>
+						<DropdownMenu
+							open={showExistingTreeChoice}
+							onOpenChange={(open) => !open && setShowExistingTreeChoice(false)}
+						>
+							<DropdownMenuTrigger asChild>
+								<span className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 pointer-events-none" />
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end" className="w-64 py-1">
+								<div className="px-3 py-1.5 text-xs text-gray-400">
+									{t("scenario.report.existing_tree_heading")}
+								</div>
+								{existingTreeMatches.map((tree) => (
+									<DropdownMenuItem
+										key={tree.id}
+										onSelect={() => handleSelectExistingTree(tree.id)}
+										className="flex items-center justify-between gap-2 px-3 py-2 text-sm cursor-pointer"
+									>
+										<span>
+											{t("scenario.report.tree_version", {
+												n: tree.version,
+											})}
+										</span>
+										<span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 whitespace-nowrap">
+											{formatDayLabel(
+												new Date(tree.createdAt),
+												t("scenario.report.today"),
+												t("scenario.report.yesterday"),
+											)}
+											,{" "}
+											{new Date(tree.createdAt).toLocaleTimeString([], {
+												hour: "numeric",
+												minute: "2-digit",
+											})}
+										</span>
+									</DropdownMenuItem>
+								))}
+								<DropdownMenuItem
+									onSelect={() => void handleGenerateNewTreeAnyway()}
+									className="flex items-center gap-1.5 px-3 py-2 text-sm cursor-pointer text-blue-600"
+								>
+									<Plus className="h-4 w-4" />
+									<span>{t("scenario.report.generate_new_tree")}</span>
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
 						<Button
 							type="submit"
 							size="sm"

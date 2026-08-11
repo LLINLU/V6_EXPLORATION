@@ -12,6 +12,11 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { formatDayLabel } from "@/lib/relativeDate"
+import {
+	findExistingTrees,
+	type TreeVersion,
+} from "@/services/treeGenerationService"
 import { useTreeDataStore } from "@/stores/treeDataStore"
 import { useTreeUIStore } from "@/stores/treeUIStore"
 import type { TreeNode } from "@/types/tree"
@@ -109,6 +114,11 @@ const asyncNoop = async () => {}
 export default function V1TreeMap() {
 	const navigate = useNavigate()
 	const [inputQuery, setInputQuery] = useState(QUERY)
+	const [mode, setMode] = useState<"TED" | "FAST">("FAST")
+	const [existingTreeMatches, setExistingTreeMatches] = useState<
+		TreeVersion[]
+	>([])
+	const [showExistingTreeChoice, setShowExistingTreeChoice] = useState(false)
 	const containerRef = useRef<HTMLDivElement>(null)
 	const expansionState = useRef(new Set<string>())
 	const panZoom = useRef({ zoom: 1, panX: 0, panY: 0 })
@@ -133,6 +143,22 @@ export default function V1TreeMap() {
 		setLevelItems(9, EMPTY)
 		setLevelItems(10, EMPTY)
 	}, [setLevelItems, setLevelNames, setTreeMode, setSidebarTab, setTrlColorMode])
+
+	const labels: Record<"TED" | "FAST", string> = {
+		TED: "シナリオを探索する",
+		FAST: "技術の構成要素を分解する",
+	}
+
+	const handleGoToPrioritization = async () => {
+		setMode("TED")
+		const matches = await findExistingTrees(inputQuery, "TED")
+		if (matches.length > 0) {
+			setExistingTreeMatches(matches)
+			setShowExistingTreeChoice(true)
+			return
+		}
+		navigate("/v1/prioritization")
+	}
 
 	const researchPanelContent = (
 		<TechTreeResearchPanelComponent
@@ -196,7 +222,7 @@ export default function V1TreeMap() {
 					<DropdownMenuTrigger asChild>
 						<button type="button" className="shrink-0 focus:outline-none">
 							<span className="inline-flex items-center text-sm border h-9 rounded-[8px] px-3 bg-blue-50 text-blue-700 border-[#cddeff] gap-1.5 whitespace-nowrap">
-								ツリーマップを直接生成する
+								{labels[mode]}
 								<svg className="h-3 w-3 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25"><path d="M6 9l6 6 6-6"/></svg>
 							</span>
 						</button>
@@ -206,16 +232,23 @@ export default function V1TreeMap() {
 							className="flex items-center justify-between px-3 py-2 text-sm cursor-pointer">
 							<span>技術の全体像を把握する</span>
 						</DropdownMenuItem>
-						<DropdownMenuItem onSelect={() => navigate("/v1/prioritization")}
+						<DropdownMenuItem onSelect={() => void handleGoToPrioritization()}
 							className="flex items-center justify-between px-3 py-2 text-sm cursor-pointer">
-							<span>シナリオを探索する</span>
+							<span>{labels.TED}</span>
+							{mode === "TED" && (
+								<svg viewBox="0 0 8 6" className="w-3 h-3 shrink-0 text-blue-600" fill="none">
+									<path d="M1 3l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+								</svg>
+							)}
 						</DropdownMenuItem>
-						<DropdownMenuItem onSelect={noop}
+						<DropdownMenuItem onSelect={() => setMode("FAST")}
 							className="flex items-center justify-between px-3 py-2 text-sm cursor-pointer">
-							<span>ツリーマップを直接生成する</span>
-							<svg viewBox="0 0 8 6" className="w-3 h-3 shrink-0 text-blue-600" fill="none">
-								<path d="M1 3l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-							</svg>
+							<span>{labels.FAST}</span>
+							{mode === "FAST" && (
+								<svg viewBox="0 0 8 6" className="w-3 h-3 shrink-0 text-blue-600" fill="none">
+									<path d="M1 3l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+								</svg>
+							)}
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
@@ -223,6 +256,48 @@ export default function V1TreeMap() {
 				<div className="relative flex-1 min-w-0">
 					<Input type="text" value={inputQuery} onChange={(e) => setInputQuery(e.target.value)}
 						placeholder="クエリを入力" className="h-9 pr-10" />
+					<DropdownMenu
+						open={showExistingTreeChoice}
+						onOpenChange={(open) => !open && setShowExistingTreeChoice(false)}
+					>
+						<DropdownMenuTrigger asChild>
+							<span className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 pointer-events-none" />
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end" className="w-64 py-1">
+							<div className="px-3 py-1.5 text-xs text-gray-400">
+								同じクエリで作成済み
+							</div>
+							{existingTreeMatches.map((tree) => (
+								<DropdownMenuItem
+									key={tree.id}
+									onSelect={() => {
+										setShowExistingTreeChoice(false)
+										navigate("/v1/prioritization")
+									}}
+									className="flex items-center justify-between gap-2 px-3 py-2 text-sm cursor-pointer"
+								>
+									<span>バージョン {tree.version}</span>
+									<span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 whitespace-nowrap">
+										{formatDayLabel(new Date(tree.createdAt), "今日", "昨日")}
+										,{" "}
+										{new Date(tree.createdAt).toLocaleTimeString([], {
+											hour: "numeric",
+											minute: "2-digit",
+										})}
+									</span>
+								</DropdownMenuItem>
+							))}
+							<DropdownMenuItem
+								onSelect={() => {
+									setShowExistingTreeChoice(false)
+									navigate("/v1/prioritization")
+								}}
+								className="px-3 py-2 text-sm cursor-pointer text-blue-600"
+							>
+								新しく作成する
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 					<Button type="button" size="sm"
 						className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 bg-transparent hover:bg-muted border-0 text-foreground">
 						<ArrowUp className="h-4 w-4" />
