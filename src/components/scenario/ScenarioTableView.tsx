@@ -22,6 +22,7 @@ import {
 } from "lucide-react"
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
 import { THEME_TRL_DEFS } from "@/components/scenario/report/theme/constants"
 import { TechCharacteristicsDialog } from "@/components/TechCharacteristicsTable"
 import { Button } from "@/components/ui/button"
@@ -62,6 +63,11 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { toast } from "@/components/ui/use-toast"
+import { formatDayLabel } from "@/lib/relativeDate"
+import {
+	getTreeVersionInfo,
+	type TreeVersionInfo,
+} from "@/services/treeGenerationService"
 import type { TechCharacteristic } from "@/types/axis"
 import type { Scenario as BaseScenario, FilterState } from "@/types/scenario"
 import { exportToCsv } from "@/utils/csvExport"
@@ -746,6 +752,7 @@ type RenderRowParams = {
 	isHovered?: boolean
 	onEditScenario: (scenario: Scenario) => void
 	onOpenAiDetail: (scenarioId: string | null) => void
+	onOpenManualDetail: (scenarioId: string | null) => void
 	onOpenTrlModal: (scenario: Scenario | null) => void
 	t: (key: string) => string
 }
@@ -760,6 +767,44 @@ const COUNT_KEY_TO_TAB: Record<string, string> = {
 	useCaseCount: "implementation",
 }
 
+function TruncatedText({
+	text,
+	className,
+}: {
+	text: string
+	className?: string
+}) {
+	const ref = useRef<HTMLDivElement>(null)
+	const [isTruncated, setIsTruncated] = useState(false)
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: text triggers re-measurement when the row's value changes
+	useEffect(() => {
+		const el = ref.current
+		if (el) {
+			setIsTruncated(el.scrollHeight > el.clientHeight)
+		}
+	}, [text])
+
+	const content = (
+		<div ref={ref} className={className}>
+			{text}
+		</div>
+	)
+
+	if (!isTruncated) return content
+
+	return (
+		<TooltipProvider delayDuration={200}>
+			<Tooltip>
+				<TooltipTrigger asChild>{content}</TooltipTrigger>
+				<TooltipContent className="max-w-[320px] whitespace-pre-wrap text-sm">
+					{text}
+				</TooltipContent>
+			</Tooltip>
+		</TooltipProvider>
+	)
+}
+
 function renderRow({
 	scenario,
 	visibleColumns,
@@ -769,6 +814,7 @@ function renderRow({
 	isHovered,
 	onEditScenario,
 	onOpenAiDetail,
+	onOpenManualDetail,
 	onOpenTrlModal,
 	t,
 }: RenderRowParams) {
@@ -779,19 +825,44 @@ function renderRow({
 			if (col.key === "name") {
 				return (
 					<div className="space-y-1">
-						<div className="text-sm text-gray-600 leading-relaxed line-clamp-3">
-							{String(rawValue ?? "—")}
-						</div>
+						<TruncatedText
+							text={String(rawValue ?? "—")}
+							className="text-sm text-gray-600 leading-relaxed line-clamp-3"
+						/>
 						{scenario.aiGenerationInput?.context && (
+							<TooltipProvider delayDuration={200}>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<button
+											type="button"
+											onClick={(e) => {
+												e.stopPropagation()
+												onOpenAiDetail(scenario.id)
+											}}
+											className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] text-blue-700 hover:bg-blue-100"
+										>
+											{t("scenario.table.ai_added_badge")}
+										</button>
+									</TooltipTrigger>
+									<TooltipContent
+										side="right"
+										className="max-w-[210px] whitespace-pre-wrap text-xs"
+									>
+										{scenario.aiGenerationInput.context}
+									</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
+						)}
+						{scenario.isManuallyAdded && (
 							<button
 								type="button"
 								onClick={(e) => {
 									e.stopPropagation()
-									onOpenAiDetail(scenario.id)
+									onOpenManualDetail(scenario.id)
 								}}
-								className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] text-blue-700 hover:bg-blue-100"
+								className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600 hover:bg-gray-200"
 							>
-								{t("scenario.table.ai_added_badge")}
+								{t("scenario.table.manual_added_badge")}
 							</button>
 						)}
 					</div>
@@ -800,9 +871,10 @@ function renderRow({
 
 			if (col.key === "summary") {
 				return (
-					<div className="line-clamp-4 text-sm text-gray-600 leading-relaxed">
-						{rawValue == null ? "—" : String(rawValue)}
-					</div>
+					<TruncatedText
+						text={rawValue == null ? "—" : String(rawValue)}
+						className="line-clamp-4 text-sm text-gray-600 leading-relaxed"
+					/>
 				)
 			}
 
@@ -1594,8 +1666,25 @@ export const ScenarioTableView = ({
 	onRetryGeneration,
 }: ScenarioTableViewProps) => {
 	const { t } = useTranslation()
+	const navigate = useNavigate()
 	const TABLE_PREFS_STORAGE_PREFIX = "scenario-table-view-prefs-v1"
 	const tablePrefsStorageKey = `${TABLE_PREFS_STORAGE_PREFIX}:${treeId || "default"}`
+
+	const [versionInfo, setVersionInfo] = useState<TreeVersionInfo | null>(null)
+
+	useEffect(() => {
+		if (!treeId) {
+			setVersionInfo(null)
+			return
+		}
+		let cancelled = false
+		getTreeVersionInfo(treeId).then((info) => {
+			if (!cancelled) setVersionInfo(info)
+		})
+		return () => {
+			cancelled = true
+		}
+	}, [treeId])
 
 	const [viewMode, setViewMode] = useState<ViewMode>("overview")
 	const [hoveredRowId, setHoveredRowId] = useState<string | null>(null)
@@ -1625,6 +1714,9 @@ export const ScenarioTableView = ({
 	const [aiDetailScenarioId, setAiDetailScenarioId] = useState<string | null>(
 		null,
 	)
+	const [manualDetailScenarioId, setManualDetailScenarioId] = useState<
+		string | null
+	>(null)
 	const [manualScenarioName, setManualScenarioName] = useState("")
 	const [manualScenarioSummary, setManualScenarioSummary] = useState("")
 	const [trlModalScenario, setTrlModalScenario] = useState<Scenario | null>(
@@ -2334,6 +2426,9 @@ export const ScenarioTableView = ({
 	}
 
 	const aiDetailScenario = scenarios.find((s) => s.id === aiDetailScenarioId)
+	const manualDetailScenario = scenarios.find(
+		(s) => s.id === manualDetailScenarioId,
+	)
 
 	const handleExportCsv = () => {
 		const rows = filteredScenarios.map((scenario) =>
@@ -2910,6 +3005,7 @@ export const ScenarioTableView = ({
 									setIsEditScenarioOpen(true)
 								},
 								onOpenAiDetail: setAiDetailScenarioId,
+								onOpenManualDetail: setManualDetailScenarioId,
 								onOpenTrlModal: setTrlModalScenario,
 								t,
 							})}
@@ -3061,6 +3157,60 @@ export const ScenarioTableView = ({
 				</DialogContent>
 			</Dialog>
 
+			<Dialog
+				open={manualDetailScenarioId !== null}
+				onOpenChange={(open) => !open && setManualDetailScenarioId(null)}
+			>
+				<DialogContent
+					className="sm:max-w-[600px] z-[100]"
+					style={{ pointerEvents: "auto" }}
+				>
+					<DialogTitle>{t("scenario.manual_detail.title")}</DialogTitle>
+					<div className="space-y-2">
+						<Label className="text-sm font-medium">
+							{t("scenario.manual_detail.name_label")}
+						</Label>
+						<Textarea
+							className="min-h-[40px] resize-none bg-gray-50 read-only:border-gray-200 read-only:focus-visible:ring-0"
+							value={manualDetailScenario?.userInput?.name ?? ""}
+							readOnly
+						/>
+					</div>
+					<div className="space-y-2">
+						<Label className="text-sm font-medium">
+							{t("scenario.manual_detail.summary_label")}
+						</Label>
+						<div className="relative">
+							<Textarea
+								className="min-h-[150px] resize-none bg-gray-50 read-only:border-gray-200 read-only:focus-visible:ring-0 pr-10"
+								value={manualDetailScenario?.userInput?.summary ?? ""}
+								readOnly
+							/>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon"
+								className="absolute right-2 top-2 h-8 w-8 text-xs text-[#b7bfcc] hover:text-gray-700 hover:bg-gray-200"
+								onClick={() => {
+									const text = manualDetailScenario?.userInput?.summary ?? ""
+									if (!text) return
+									void navigator.clipboard.writeText(text)
+									toast({
+										title: t("scenario.manual_detail.copied_title"),
+										description: t("scenario.manual_detail.copied_description"),
+									})
+								}}
+							>
+								<Copy className="h-4 w-4" />
+								<span className="sr-only">
+									{t("scenario.manual_detail.copy_sr")}
+								</span>
+							</Button>
+						</div>
+					</div>
+				</DialogContent>
+			</Dialog>
+
 			<div className="bg-white rounded-lg overflow-hidden h-full flex flex-col">
 				<div className="p-4 border-b bg-white space-y-3 flex-shrink-0">
 					<div className="flex items-center justify-between">
@@ -3087,6 +3237,67 @@ export const ScenarioTableView = ({
 										</TooltipContent>
 									</Tooltip>
 								</TooltipProvider>
+								{versionInfo && versionInfo.total > 1 && (
+									<DropdownMenu>
+										<TooltipProvider delayDuration={200}>
+											<Tooltip>
+												<DropdownMenuTrigger asChild>
+													<TooltipTrigger asChild>
+														<button
+															type="button"
+															className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 hover:bg-gray-200 whitespace-nowrap"
+														>
+															{t("scenario.report.tree_version", {
+																n: versionInfo.version,
+															})}
+															{" · "}
+															{formatDayLabel(
+																new Date(versionInfo.createdAt),
+																t("scenario.report.today"),
+																t("scenario.report.yesterday"),
+															)}
+														</button>
+													</TooltipTrigger>
+												</DropdownMenuTrigger>
+												<TooltipContent side="bottom" className="text-xs">
+													{t("scenario.report.version_tag_tooltip")}
+												</TooltipContent>
+											</Tooltip>
+										</TooltipProvider>
+										<DropdownMenuContent align="start" className="w-56 py-1">
+											{versionInfo.versions.map((v) => (
+												<DropdownMenuItem
+													key={v.id}
+													onSelect={() => {
+														if (v.id === treeId) return
+														navigate(
+															`/scenario-selection?tree_id=${encodeURIComponent(v.id)}`,
+														)
+													}}
+													className="flex items-center justify-between gap-2 px-3 py-2 text-sm cursor-pointer"
+												>
+													<span>
+														{t("scenario.report.tree_version", {
+															n: v.version,
+														})}
+													</span>
+													<span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 whitespace-nowrap">
+														{formatDayLabel(
+															new Date(v.createdAt),
+															t("scenario.report.today"),
+															t("scenario.report.yesterday"),
+														)}
+														,{" "}
+														{new Date(v.createdAt).toLocaleTimeString([], {
+															hour: "numeric",
+															minute: "2-digit",
+														})}
+													</span>
+												</DropdownMenuItem>
+											))}
+										</DropdownMenuContent>
+									</DropdownMenu>
+								)}
 							</div>
 
 							{/* 3-step stepper */}

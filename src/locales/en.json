@@ -465,7 +465,8 @@
 			"retry_generation": "Retry",
 			"no_data_tooltip": "No data yet",
 			"new_scenario": "New Scenario",
-			"ai_added_badge": "AI",
+			"ai_added_badge": "Added by AI",
+			"manual_added_badge": "Manually added",
 			"delete": "Delete",
 			"delete_column": "Remove column",
 			"clear_all_filters": "Clear all filters"
@@ -710,6 +711,14 @@
 			"copied_title": "Copied",
 			"copied_description": "Copied to clipboard"
 		},
+		"manual_detail": {
+			"title": "Manually added content",
+			"name_label": "Scenario name",
+			"summary_label": "Summary",
+			"copy_sr": "Copy",
+			"copied_title": "Copied",
+			"copied_description": "Copied to clipboard"
+		},
 		"custom_view": {
 			"title": "Custom View",
 			"description": "Choose which metrics to show in your custom view",
@@ -773,7 +782,13 @@
 			"status_running": "Running",
 			"status_done": "Done",
 			"status_error": "Error",
-			"sections_complete": "{{done}}/{{total}} sections done"
+			"sections_complete": "{{done}}/{{total}} sections done",
+			"existing_tree_heading": "Already created for this query",
+			"generate_new_tree": "Create new",
+			"tree_version": "Version {{n}}",
+			"today": "Today",
+			"yesterday": "Yesterday",
+			"version_tag_tooltip": "Click to switch versions"
 		},
 		"metrics": {
 			"category_market": "Market Metrics",

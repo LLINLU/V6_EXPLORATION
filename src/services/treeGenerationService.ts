@@ -486,6 +486,78 @@ export async function addManualScenario(
 	}
 }
 
+export type TreeVersion = {
+	id: string
+	version: number
+	createdAt: string
+}
+
+export type TreeVersionInfo = {
+	version: number
+	total: number
+	createdAt: string
+	versions: TreeVersion[]
+}
+
+// ── Design-exploration stub ──────────────────────────────────────────────
+// These three functions are dummy-data placeholders for this branch only.
+// The real implementation (querying `technology_trees` by search_theme +
+// mode + team) lives in memory-ai-app on Lindsay/RDE-619 — not ported here
+// so this branch stays backend-free for UI/design review purposes.
+function buildMockVersions(currentId?: string): TreeVersion[] {
+	const now = Date.now()
+	const HOUR = 60 * 60 * 1000
+	const versions: TreeVersion[] = [
+		{
+			id: "demo-version-1",
+			version: 1,
+			createdAt: new Date(now - 3 * HOUR).toISOString(),
+		},
+		{
+			id: "demo-version-2",
+			version: 2,
+			createdAt: new Date(now - 1 * HOUR).toISOString(),
+		},
+		{
+			id: currentId ?? "demo-version-3",
+			version: 3,
+			createdAt: new Date(now).toISOString(),
+		},
+	]
+	return versions
+}
+
+export async function listTreeVersions(
+	_searchTheme: string,
+	_mode: "TED" | "FAST",
+	_teamId?: string,
+): Promise<TreeVersion[]> {
+	return buildMockVersions()
+}
+
+export async function findExistingTrees(
+	searchTheme: string,
+	mode: "TED" | "FAST",
+	teamId?: string,
+): Promise<TreeVersion[]> {
+	const versions = await listTreeVersions(searchTheme, mode, teamId)
+	return [...versions].reverse()
+}
+
+export async function getTreeVersionInfo(
+	treeId: string,
+): Promise<TreeVersionInfo | null> {
+	const versions = buildMockVersions(treeId)
+	const match = versions[versions.length - 1]
+
+	return {
+		version: match.version,
+		total: versions.length,
+		createdAt: match.createdAt,
+		versions,
+	}
+}
+
 export async function checkTreeGenerationStatus(treeId: string): Promise<{
 	isComplete: boolean
 	completedCount: number

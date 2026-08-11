@@ -1945,6 +1945,7 @@ export function ScenarioSelectionScreen() {
 					<ScenarioSelectionHeader
 						query={treeMeta?.search_theme || ""}
 						mode={treeMeta?.mode}
+						treeId={treeId}
 						keywords={[]}
 					/>
 
