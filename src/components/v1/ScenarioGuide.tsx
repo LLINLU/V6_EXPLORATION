@@ -57,17 +57,25 @@ const STEPS = [
   { key: "result", label: "有望シナリオ" },
 ]
 
+// Same 3-band grouping as the FAST tree map's TRL legend
+// (基礎研究 1–3 / 実証段階 4–6 / 商業化済み 7–9), not a per-level rainbow.
+const trlBandColor = (level: number) =>
+  level <= 3 ? "#e8898f" : level <= 6 ? "#d9a63c" : "#6f93d1"
+
 function TrlBar({ trl }: { trl: number }) {
-  const colors = ["#fecaca","#fed7aa","#fef08a","#d9f99d","#bbf7d0","#99f6e4","#a5f3fc","#bae6fd","#bfdbfe"]
   return (
     <div className="flex items-center gap-0.5">
-      {Array.from({ length: 9 }, (_, i) => (
-        <div
-          key={i}
-          className="h-1.5 rounded-sm flex-shrink-0"
-          style={{ width: i < trl ? 7 : 4, background: i < trl ? colors[i] : "#f3f4f6" }}
-        />
-      ))}
+      {Array.from({ length: 9 }, (_, i) => {
+        const level = i + 1
+        const filled = level <= trl
+        return (
+          <div
+            key={i}
+            className="h-1.5 rounded-sm flex-shrink-0"
+            style={{ width: filled ? 7 : 4, background: filled ? trlBandColor(level) : "#f3f4f6" }}
+          />
+        )
+      })}
       <span className="text-[10px] text-gray-400 ml-1">{trl}</span>
     </div>
   )

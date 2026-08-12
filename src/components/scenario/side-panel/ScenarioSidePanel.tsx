@@ -66,15 +66,30 @@ import { PaperTab } from "./tabs/PaperTab"
 import { PatentTab } from "./tabs/PatentTab"
 import { ReportTab } from "./tabs/ReportTab"
 
-const TRL_SEGMENT_COLORS = ["#fecaca","#fed7aa","#fef08a","#d9f99d","#bbf7d0","#99f6e4","#a5f3fc","#bae6fd","#bfdbfe"]
+// Same 3-band grouping as the FAST tree map's TRL legend
+// (基礎研究 1–3 / 実証段階 4–6 / 商業化済み 7–9), not a per-level rainbow.
+const trlBandColor = (level: number) =>
+	level <= 3 ? "#e8898f" : level <= 6 ? "#d9a63c" : "#6f93d1"
 
 function TrlDots({ level }: { level: number }) {
 	return (
 		<div className="flex items-center gap-1">
 			{Array.from({ length: 9 }, (_, i) => {
-				const filled = i < level
+				const dotLevel = i + 1
+				const filled = dotLevel <= level
+				const isCurrent = dotLevel === level
+				const color = trlBandColor(dotLevel)
 				return (
-					<div key={i} className="rounded-full shrink-0" style={{ width: filled ? 10 : 7, height: filled ? 10 : 7, background: filled ? TRL_SEGMENT_COLORS[i] : "#e5e7eb" }} />
+					<div
+						key={i}
+						className="rounded-full shrink-0"
+						style={{
+							width: filled ? 10 : 7,
+							height: filled ? 10 : 7,
+							background: filled ? color : "#e5e7eb",
+							boxShadow: isCurrent ? `0 0 0 3px ${color}38` : undefined,
+						}}
+					/>
 				)
 			})}
 			<span className="text-sm text-gray-400 ml-1 tabular-nums">{level}</span>
@@ -179,11 +194,41 @@ function buildTrlSummary(rows: TrlRow[]): string {
 	)
 }
 
-function trlNodeColors(trl: number | null): { bg: string; border: string; arrow: string; text: string } {
-	if (trl == null) return { bg: "#f9fafb", border: "#e5e7eb", arrow: "#d1d5db", text: "#6b7280" }
-	if (trl >= 8) return { bg: "#f1f7ff", border: "#bfdbfe", arrow: "#93c5fd", text: "#1d4ed8" }
-	if (trl >= 6) return { bg: "#feffec", border: "#fde68a", arrow: "#fcd34d", text: "#92400e" }
-	return { bg: "#feeeee", border: "#fecaca", arrow: "#fca5a5", text: "#b91c1c" }
+type TrlNodeColors = { bg: string; border: string; arrow: string; text: string }
+
+// Same 3-band grouping as the FAST tree map's TRL legend
+// (基礎研究 1–3 / 実証段階 4–6 / 商業化済み 7–9).
+function trlNodeColors(trl: number | null): TrlNodeColors {
+	if (trl == null) {
+		return {
+			bg: "#f9fafb",
+			border: "#e5e7eb",
+			arrow: "#d1d5db",
+			text: "#6b7280",
+		}
+	}
+	if (trl <= 3) {
+		return {
+			bg: "#fdf1f1",
+			border: "#f6d2d4",
+			arrow: "#e8898f",
+			text: "#c65a60",
+		}
+	}
+	if (trl <= 6) {
+		return {
+			bg: "#fbf4e1",
+			border: "#ecd292",
+			arrow: "#d9a63c",
+			text: "#a67c1f",
+		}
+	}
+	return {
+		bg: "#eef3fb",
+		border: "#b9cceb",
+		arrow: "#6f93d1",
+		text: "#4a6da8",
+	}
 }
 
 function TrlPipelineDiagram({ rows }: { rows: TrlRow[] }) {
@@ -206,9 +251,15 @@ function TrlPipelineDiagram({ rows }: { rows: TrlRow[] }) {
 									<div className="w-full rounded-lg p-2.5" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}>
 										<p className="text-[11px] font-semibold text-gray-800 leading-tight mb-0.5 line-clamp-1">{row.name}</p>
 										{row.trl != null && (
-											<p className="text-[10px] mb-1.5" style={{ color: colors.text }}>
-												TRL {row.trl} – {row.interpretation}
-											</p>
+											<span
+												className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold mb-1.5"
+												style={{
+													backgroundColor: `${trlBandColor(row.trl)}26`,
+													color: trlBandColor(row.trl),
+												}}
+											>
+												TRL {row.trl}
+											</span>
 										)}
 										<p className="text-[10px] text-gray-500 leading-relaxed line-clamp-2">{row.explanation}</p>
 									</div>

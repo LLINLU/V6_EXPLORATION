@@ -882,24 +882,18 @@ function renderRow({
 				if (rawValue == null)
 					return <span className="text-sm text-gray-400">—</span>
 				const trlNum = Number(rawValue)
-				const TRL_SEGMENT_COLORS = ["#fecaca","#fed7aa","#fef08a","#d9f99d","#bbf7d0","#99f6e4","#a5f3fc","#bae6fd","#bfdbfe"]
-				const textColor =
-					trlNum >= 7
-						? "text-sky-500"
-						: trlNum >= 4
-							? "text-emerald-500"
-							: "text-amber-500"
-				const tooltipBg =
-					trlNum >= 7
-						? "bg-emerald-50 border-emerald-100"
-						: trlNum >= 4
-							? "bg-blue-50 border-blue-200"
-							: "bg-amber-50 border-amber-200"
+				// Same 3-band grouping as the FAST tree map's TRL legend
+				// (基礎研究 1–3 / 実証段階 4–6 / 商業化済み 7–9), not a per-level rainbow.
+				const trlBandColor = (level: number) =>
+					level <= 3 ? "#e8898f" : level <= 6 ? "#d9a63c" : "#6f93d1"
 				const trlDef = THEME_TRL_DEFS.find((d) => d.level === trlNum)
 				const chart = (
 					<div className="flex items-center gap-1">
 						{Array.from({ length: 9 }, (_, i) => {
-							const filled = i < trlNum
+							const level = i + 1
+							const filled = level <= trlNum
+							const isCurrent = level === trlNum
+							const color = trlBandColor(level)
 							return (
 								<div
 									key={i}
@@ -907,7 +901,8 @@ function renderRow({
 									style={{
 										width: filled ? 10 : 7,
 										height: filled ? 10 : 7,
-										background: filled ? TRL_SEGMENT_COLORS[i] : "#e5e7eb",
+										background: filled ? color : "#e5e7eb",
+										boxShadow: isCurrent ? `0 0 0 3px ${color}38` : undefined,
 									}}
 								/>
 							)
@@ -934,9 +929,9 @@ function renderRow({
 							<TooltipTrigger asChild>{trlButton}</TooltipTrigger>
 							<TooltipContent
 								side="bottom"
-								className={`max-w-[240px] space-y-1 p-3 ${tooltipBg}`}
+								className="max-w-[240px] space-y-1 p-3 bg-blue-50"
 							>
-								<p className={`text-xs font-bold ${textColor}`}>
+								<p className="text-xs font-bold text-gray-900">
 									TRL {trlNum} — {trlDef.title}
 								</p>
 								<p className="text-xs text-gray-600 leading-relaxed">

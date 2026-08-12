@@ -13,13 +13,19 @@ import {
 import type { Scenario } from "@/types/scenario"
 import { getTRLDescription } from "./TRLIndicator"
 
-const TRL_SEGMENT_COLORS = ["#fecaca","#fed7aa","#fef08a","#d9f99d","#bbf7d0","#99f6e4","#a5f3fc","#bae6fd","#bfdbfe"]
+// Same 3-band grouping as the FAST tree map's TRL legend
+// (基礎研究 1–3 / 実証段階 4–6 / 商業化済み 7–9), not a per-level rainbow.
+const trlBandColor = (level: number) =>
+	level <= 3 ? "#e8898f" : level <= 6 ? "#d9a63c" : "#6f93d1"
 
 function TrlDots({ level }: { level: number }) {
 	return (
 		<div className="flex items-center gap-1">
 			{Array.from({ length: 9 }, (_, i) => {
-				const filled = i < level
+				const dotLevel = i + 1
+				const filled = dotLevel <= level
+				const isCurrent = dotLevel === level
+				const color = trlBandColor(dotLevel)
 				return (
 					<div
 						key={i}
@@ -27,7 +33,8 @@ function TrlDots({ level }: { level: number }) {
 						style={{
 							width: filled ? 10 : 7,
 							height: filled ? 10 : 7,
-							background: filled ? TRL_SEGMENT_COLORS[i] : "#e5e7eb",
+							background: filled ? color : "#e5e7eb",
+							boxShadow: isCurrent ? `0 0 0 3px ${color}38` : undefined,
 						}}
 					/>
 				)
