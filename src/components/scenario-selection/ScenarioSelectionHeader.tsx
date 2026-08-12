@@ -158,7 +158,7 @@ export function ScenarioSelectionHeader({
 		<>
 			<div className="bg-white rounded-lg px-4 py-1.5 flex items-center justify-between flex-shrink-0">
 				{/* Mode dropdown + query, packed together like QueryReportHeader */}
-				<div className="w-1/2 min-w-0 flex items-center gap-[0.2rem]">
+				<div className="w-1/2 min-w-0 mx-auto flex items-center gap-[0.2rem]">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<button
