@@ -157,8 +157,8 @@ export function ScenarioSelectionHeader({
 	return (
 		<>
 			<div className="bg-white rounded-lg px-4 py-1.5 flex items-center justify-between flex-shrink-0">
-				{/* Mode dropdown */}
-				<div className="flex items-center gap-2 w-[220px]">
+				{/* Mode dropdown + query, packed together like QueryReportHeader */}
+				<div className="w-1/2 min-w-0 flex items-center gap-[0.2rem]">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<button
@@ -292,22 +292,21 @@ export function ScenarioSelectionHeader({
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
-				</div>
 
-				{/* Query */}
-				<div className="w-1/2 mx-auto">
-					<QueryDisplay
-						className="mb-0"
-						query={query}
-						treeMode={mode ?? undefined}
-						initialKeywords={keywords}
-						hideContainer
-						disableSubmit
-					/>
+					<div className="flex-1 min-w-0">
+						<QueryDisplay
+							className="mb-0"
+							query={query}
+							treeMode={mode ?? undefined}
+							initialKeywords={keywords}
+							hideContainer
+							disableSubmit
+						/>
+					</div>
 				</div>
 
 				{/* Ask AI button */}
-				<div className="flex items-center gap-2 w-[220px] justify-end">
+				<div className="flex items-center gap-2">
 					<Button
 						onClick={handleAskAI}
 						className="ask-ai-btn rounded-full px-[18px] py-3 text-white font-medium flex items-center z-50"
